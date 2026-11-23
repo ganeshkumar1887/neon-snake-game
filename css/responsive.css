@@ -117,7 +117,7 @@
     font-size: 17px;
   }
 
-  .screen-game {
+  .screen-game.active {
     height: 100dvh;
     max-height: 100dvh;
     justify-content: center;
@@ -169,7 +169,7 @@
    BREAKPOINT 2: Standard Laptops (1024px to 1439px)
    ========================================================================== */
 @media (min-width: 1024px) and (max-width: 1439px) {
-  .screen-game {
+  .screen-game.active {
     height: 100dvh;
     max-height: 100dvh;
     justify-content: center;
@@ -208,7 +208,7 @@
    BREAKPOINT 3: Tablets (768px to 1023px)
    ========================================================================== */
 @media (min-width: 768px) and (max-width: 1023px) {
-  .screen-game {
+  .screen-game.active {
     height: 100dvh;
     max-height: 100dvh;
     justify-content: center;
@@ -266,122 +266,208 @@
    ========================================================================== */
 @media (max-width: 767px) {
   html, body {
-    font-size: 15px;
+    font-size: 14px;
     width: 100%;
     min-height: 100%;
     margin: 0;
     padding: 0;
     overflow-x: hidden;
+    background-color: var(--color-bg-deep);
+  }
+
+  /* When playing game, lock body completely so zero scrolling occurs */
+  body.in-game {
+    overflow: hidden !important;
+    height: 100dvh !important;
+    position: fixed !important;
+    width: 100% !important;
   }
 
   .app-container {
     padding: 0;
     margin: 0 auto;
     width: 100%;
-    min-height: 100dvh;
+    min-height: 100%;
     overflow-x: hidden;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
   }
 
-  /* Mobile Home Screen */
-  .screen-home {
+  /* Mobile Home Screen: Clean, natural single-scroll, no empty dead space */
+  .screen-home.active {
     width: 100%;
     min-height: 100dvh;
-    padding: 0.75rem 0.65rem;
+    height: auto;
+    padding: 0.5rem 0.5rem 1.5rem;
     display: flex !important;
     flex-direction: column;
     justify-content: flex-start;
     align-items: center;
     box-sizing: border-box;
-    overflow-y: auto;
     overflow-x: hidden;
   }
 
   .home-card {
     width: 100% !important;
     max-width: 440px !important;
-    padding: 1.2rem 1rem !important;
-    border-radius: 24px;
+    padding: 1rem 0.85rem !important;
+    border-radius: 22px;
     margin: 0 auto;
-    gap: 0.9rem;
+    gap: 0.75rem;
+  }
+
+  .home-header {
+    gap: 0.65rem;
   }
 
   .game-logo {
-    font-size: 1.3rem;
+    font-size: 1.25rem;
+  }
+
+  .hero-mascot-box {
+    padding: 0.65rem 0.75rem;
+    gap: 0.45rem;
+    border-radius: 16px;
+  }
+
+  .hero-welcome .welcome-title {
+    font-size: 0.95rem;
+  }
+
+  .hero-canvas {
+    height: 70px;
+  }
+
+  .home-cards-section {
+    gap: 0.45rem;
   }
 
   .home-cards-grid {
     grid-template-columns: repeat(2, 1fr);
-    gap: 8px;
+    gap: 6px;
   }
 
   .home-card-item {
-    padding: 0.75rem 0.75rem;
-    border-radius: 18px;
-  }
-
-  .card-title {
-    font-size: 0.88rem;
-  }
-
-  .card-desc {
-    font-size: 0.68rem;
-  }
-
-  .card-badge {
-    font-size: 0.62rem;
-    padding: 0.15rem 0.4rem;
-  }
-
-  .btn-play-bouncy {
-    padding: 0.9rem 1.2rem;
-    font-size: 1.15rem;
-    border-radius: 40px;
-  }
-
-  .home-nav {
-    gap: 5px;
-  }
-
-  .nav-pill-btn {
-    padding: 0.35rem 0.65rem;
-    font-size: 0.7rem;
+    padding: 0.65rem 0.65rem;
     border-radius: 16px;
   }
 
-  /* Mobile Gameplay Screen */
-  .screen-game {
+  .card-top {
+    gap: 0.3rem;
+  }
+
+  .card-icon-wrap {
+    width: 28px;
+    height: 28px;
+  }
+
+  .card-title {
+    font-size: 0.82rem;
+  }
+
+  .card-desc {
+    font-size: 0.64rem;
+  }
+
+  .card-badge, .card-badge-pill {
+    font-size: 0.58rem;
+    padding: 0.12rem 0.35rem;
+  }
+
+  .home-mode-banner {
+    padding: 0.6rem 0.8rem;
+    border-radius: 16px;
+    gap: 0.5rem;
+  }
+
+  .mode-banner-icon {
+    font-size: 1.3rem;
+  }
+
+  .mode-banner-title {
+    font-size: 0.92rem;
+  }
+
+  .difficulty-picker {
+    gap: 0.3rem;
+  }
+
+  .difficulty-options {
+    gap: 6px;
+    padding: 4px;
+    border-radius: 14px;
+  }
+
+  .diff-btn {
+    padding: 0.45rem 0.3rem;
+  }
+
+  .diff-title {
+    font-size: 0.78rem;
+  }
+
+  .btn-play-bouncy {
+    padding: 0.8rem 1.2rem;
+    font-size: 1.1rem;
+    border-radius: 35px;
+  }
+
+  .home-nav {
+    gap: 4px;
+  }
+
+  .nav-pill-btn {
+    padding: 0.32rem 0.55rem;
+    font-size: 0.68rem;
+    border-radius: 14px;
+  }
+
+  .home-footer {
+    margin-top: 0.1rem;
+    font-size: 0.68rem;
+  }
+
+  /* Mobile Gameplay Screen: Fixed to exact viewport, zero unwanted scrolling */
+  .screen-game.active {
+    position: fixed;
+    inset: 0;
     width: 100%;
-    min-height: 100dvh;
     height: 100dvh;
-    padding: 0.5rem 0.6rem 0.75rem;
+    max-height: 100dvh;
+    padding: 0.4rem 0.5rem 0.6rem;
     box-sizing: border-box;
     display: flex !important;
     flex-direction: column;
     justify-content: space-between;
     align-items: center;
-    overflow: hidden;
+    overflow: hidden !important;
+    touch-action: none;
+    z-index: 20;
+    background: var(--color-bg-deep);
   }
 
   .game-hud {
     width: 100%;
     max-width: 100%;
-    padding: 0.45rem 0.75rem;
-    border-radius: 18px;
+    padding: 0.4rem 0.65rem;
+    border-radius: 16px;
     margin-bottom: 0.2rem;
     gap: 0.2rem;
   }
 
   .hud-label {
-    font-size: 0.58rem;
+    font-size: 0.55rem;
   }
 
   .hud-value {
-    font-size: 1.1rem;
+    font-size: 1.05rem;
   }
 
   .hud-mode-pill {
-    font-size: 0.65rem;
-    padding: 0.15rem 0.45rem;
+    font-size: 0.62rem;
+    padding: 0.12rem 0.4rem;
   }
 
   .btn-hud-action {
@@ -397,7 +483,7 @@
   /* Game Board: Scaled to available screen size */
   .game-board-container {
     width: 100%;
-    max-width: min(92vw, 48vh, 380px);
+    max-width: min(92vw, 48vh, 370px);
     aspect-ratio: 1 / 1;
     border-radius: 20px;
     border-width: 2.5px;
@@ -410,24 +496,24 @@
     display: block !important;
     width: 100%;
     max-width: 300px;
-    margin: 0.35rem auto 0;
+    margin: 0.2rem auto 0;
     flex-shrink: 0;
   }
 
   .dpad-grid {
-    width: 160px;
-    height: 160px;
+    width: 155px;
+    height: 155px;
     gap: 6px;
   }
 
   .dpad-btn {
-    width: 48px;
-    height: 48px;
+    width: 46px;
+    height: 46px;
   }
 
   .dpad-btn svg {
-    width: 22px;
-    height: 22px;
+    width: 20px;
+    height: 20px;
   }
 
   .footer-desktop-hint { display: none !important; }
@@ -439,14 +525,20 @@
    BREAKPOINT 5: Handheld Mobile Landscape (max-height: 500px)
    ========================================================================== */
 @media (max-height: 500px) and (orientation: landscape) {
-  .screen-game {
+  .screen-game.active {
+    position: fixed;
+    inset: 0;
     flex-direction: row !important;
     justify-content: center !important;
     align-items: center !important;
-    padding: 0.4rem 1rem !important;
+    padding: 0.35rem 1rem !important;
     gap: 1.2rem !important;
     height: 100dvh;
-    overflow: hidden;
+    max-height: 100dvh;
+    overflow: hidden !important;
+    touch-action: none;
+    z-index: 20;
+    background: var(--color-bg-deep);
   }
 
   .game-hud {

@@ -855,9 +855,13 @@ const UI = (() => {
       if (screenName === 'game') {
         els.screenHome.classList.remove('active');
         els.screenGame.classList.add('active');
+        document.body.classList.add('in-game');
+        window.scrollTo(0, 0);
       } else {
         els.screenGame.classList.remove('active');
         els.screenHome.classList.add('active');
+        document.body.classList.remove('in-game');
+        window.scrollTo(0, 0);
         this.updatePlayerProfile();
         this.updateHomeModeBanner();
         this.updateBestScoreDisplay();
