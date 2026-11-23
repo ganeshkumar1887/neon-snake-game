@@ -644,14 +644,18 @@ html, body {
   color: #0369A1;
 }
 
-/* Card 5: THEMES (Pastel Purple) */
-.card-purple {
-  background: linear-gradient(135deg, #F9F6FF 0%, #EFE8FF 100%);
-  border: 2px solid #DECFFF;
+/* Card 5: THEMES (Light Blue #A9E7EC) */
+.card-lightblue, .card-purple {
+  background: linear-gradient(135deg, #F0FBFC 0%, #DBF6F8 100%);
+  border: 2px solid #BAE6FD;
 }
-.bg-purple-icon {
-  background: #A78BFA;
+.bg-lightblue-icon, .bg-purple-icon {
+  background: #38BDF8;
   color: #FFFFFF;
+}
+.card-lightblue:hover, .card-purple:hover {
+  border-color: #0284C7;
+  transform: translateY(-2px);
 }
 
 /* Card 6: SETTINGS (Mint Green #A9EDB0) */
@@ -1129,6 +1133,17 @@ html, body {
   font-family: var(--font-display);
   font-size: 0.85rem;
   font-weight: 800;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.record-star-svg {
+  width: 16px;
+  height: 16px;
+  display: inline-block;
+  vertical-align: middle;
 }
 
 .gameover-stats-grid {

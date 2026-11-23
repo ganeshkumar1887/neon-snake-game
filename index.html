@@ -109,7 +109,7 @@
             <div class="home-card-item card-peach active" data-mode="classic" role="button" tabindex="0">
               <div class="card-top">
                 <span class="card-icon-wrap bg-peach-icon">
-                  <svg viewBox="0 0 24 24" class="svg-card-icon"><path fill="currentColor" d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 14.5v-9l6 4.5-6 4.5z"/></svg>
+                  <svg viewBox="0 0 24 24" class="svg-card-icon"><path fill="currentColor" d="M19 8c-.6 0-1.1.2-1.5.6l-3.1 3.1c-.4.4-1 .6-1.5.6s-1.1-.2-1.5-.6l-1.1-1.1c-.8-.8-1.9-1.2-3-1.2H4c-1.1 0-2 .9-2 2s.9 2 2 2h3.3c.5 0 1 .2 1.4.6l1.1 1.1c.8.8 1.9 1.2 3 1.2s2.2-.4 3-1.2l3.1-3.1c.4-.4 1-.6 1.5-.6s1 .2 1.4.6l.7.7c.4.4 1 .4 1.4 0s.4-1 0-1.4l-.7-.7c-.8-.8-1.9-1.3-3.1-1.3zm0-3a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3z"/></svg>
                 </span>
                 <span class="card-badge" id="card-badge-classic">BEST: 0</span>
               </div>
@@ -144,10 +144,10 @@
               <div class="card-check">✓ SELECTED</div>
             </div>
 
-            <!-- Card 5: THEMES (Pastel Purple) -->
-            <div class="home-card-item card-purple" id="btn-home-card-themes" role="button" tabindex="0" onclick="UI.openThemesModal()">
+            <!-- Card 5: THEMES (Light Blue) -->
+            <div class="home-card-item card-lightblue" id="btn-home-card-themes" role="button" tabindex="0" onclick="UI.openThemesModal()">
               <div class="card-top">
-                <span class="card-icon-wrap bg-purple-icon">
+                <span class="card-icon-wrap bg-lightblue-icon">
                   <svg viewBox="0 0 24 24" class="svg-card-icon"><path fill="currentColor" d="M12 3c-4.97 0-9 4.03-9 9 0 2.12.74 4.07 1.97 5.61L4.35 19.4c-.39.39-.39 1.02 0 1.41.39.39 1.02.39 1.41 0l1.9-1.9C9.22 19.64 10.57 20 12 20c4.97 0 9-4.03 9-9s-4.03-9-9-9zm-5 9c-.83 0-1.5-.67-1.5-1.5S6.17 9 7 9s1.5.67 1.5 1.5S7.83 12 7 12zm3-4c-.83 0-1.5-.67-1.5-1.5S9.17 5 10 5s1.5.67 1.5 1.5S10.83 8 10 8zm4 0c-.83 0-1.5-.67-1.5-1.5S13.17 5 14 5s1.5.67 1.5 1.5S14.83 8 14 8zm3 4c-.83 0-1.5-.67-1.5-1.5S16.17 9 17 9s1.5.67 1.5 1.5S17.83 12 17 12z"/></svg>
                 </span>
                 <span class="card-badge-pill">6 WORLDS</span>
@@ -176,7 +176,7 @@
         <!-- Selected Game Mode Quick Banner -->
         <div class="home-mode-banner" id="home-mode-banner">
           <div class="mode-banner-left">
-            <span class="mode-banner-icon" id="home-mode-icon">🐍</span>
+            <span class="mode-banner-icon" id="home-mode-icon"><svg viewBox="0 0 24 24" class="svg-mode-badge-icon"><path fill="currentColor" d="M19 8c-.6 0-1.1.2-1.5.6l-3.1 3.1c-.4.4-1 .6-1.5.6s-1.1-.2-1.5-.6l-1.1-1.1c-.8-.8-1.9-1.2-3-1.2H4c-1.1 0-2 .9-2 2s.9 2 2 2h3.3c.5 0 1 .2 1.4.6l1.1 1.1c.8.8 1.9 1.2 3 1.2s2.2-.4 3-1.2l3.1-3.1c.4-.4 1-.6 1.5-.6s1 .2 1.4.6l.7.7c.4.4 1 .4 1.4 0s.4-1 0-1.4l-.7-.7c-.8-.8-1.9-1.3-3.1-1.3zm0-3a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3z"/></svg></span>
             <div class="mode-banner-info">
               <div class="mode-banner-meta">
                 <span class="mode-banner-badge" id="home-mode-badge">CLASSIC</span>
@@ -390,7 +390,8 @@
 
             <!-- New High Score Banner -->
             <div id="gameover-new-record" class="new-record-tag hide">
-              ✨ NEW HIGH SCORE! ✨
+              <svg class="record-star-svg" viewBox="0 0 24 24"><path fill="#D97706" d="M12 2l2.9 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l7.1-1.01L12 2z"/></svg>
+              <span>NEW HIGH SCORE!</span>
             </div>
 
             <div class="gameover-stats-grid">

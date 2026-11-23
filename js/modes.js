@@ -26,7 +26,7 @@ const GameModes = (() => {
       id: 'classic',
       name: 'Classic Mode',
       badge: 'VINTAGE',
-      icon: '<svg viewBox="0 0 24 24" class="svg-mode-badge-icon"><path fill="currentColor" d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 14.5v-9l6 4.5-6 4.5z"/></svg>',
+      icon: '<svg viewBox="0 0 24 24" class="svg-mode-badge-icon"><path fill="currentColor" d="M19 8c-.6 0-1.1.2-1.5.6l-3.1 3.1c-.4.4-1 .6-1.5.6s-1.1-.2-1.5-.6l-1.1-1.1c-.8-.8-1.9-1.2-3-1.2H4c-1.1 0-2 .9-2 2s.9 2 2 2h3.3c.5 0 1 .2 1.4.6l1.1 1.1c.8.8 1.9 1.2 3 1.2s2.2-.4 3-1.2l3.1-3.1c.4-.4 1-.6 1.5-.6s1 .2 1.4.6l.7.7c.4.4 1 .4 1.4 0s.4-1 0-1.4l-.7-.7c-.8-.8-1.9-1.3-3.1-1.3zm0-3a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3z"/></svg>',
       tagline: 'Traditional arcade snake. Pure skill & precision.',
       description: 'Standard perimeter walls. Hitting walls or your own tail causes instant death. 3 selectable difficulties.',
       wrapWalls: false,
