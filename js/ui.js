@@ -155,189 +155,548 @@ const UI = (() => {
     els.dpadRight = document.getElementById('dpad-right');
   };
 
-  // Setup animated hero banner on home screen
+  // Setup prominent animated cartoon mascot showcase on home screen
   const initHeroCanvas = () => {
     if (!els.heroCanvas) return;
     const canvas = els.heroCanvas;
+    canvas.width = 600;
+    canvas.height = 220;
     const ctx = canvas.getContext('2d');
     let t = 0;
+
+    // Environmental decorative elements
+    const clouds = [
+      { x: 50, y: 32, scale: 0.9, speed: 0.22 },
+      { x: 260, y: 22, scale: 1.25, speed: 0.28 },
+      { x: 480, y: 38, scale: 0.8, speed: 0.18 }
+    ];
+
+    const stars = [
+      { x: 80, y: 70, size: 4, phase: 0 },
+      { x: 210, y: 40, size: 5, phase: 1.8 },
+      { x: 350, y: 65, size: 3.5, phase: 3.2 },
+      { x: 440, y: 30, size: 4.5, phase: 4.5 },
+      { x: 540, y: 75, size: 3.8, phase: 5.7 }
+    ];
+
+    const leaves = [
+      { x: 120, y: 80, speed: 0.45, rotSpeed: 0.02, rot: 0, amp: 14, phase: 0 },
+      { x: 340, y: 95, speed: 0.38, rotSpeed: 0.025, rot: 1.2, amp: 18, phase: 2 },
+      { x: 520, y: 70, speed: 0.42, rotSpeed: 0.018, rot: 2.5, amp: 12, phase: 4 }
+    ];
+
+    // Interactive fruit and particles
+    let fruit = { x: 380, y: 130, eaten: false, respawnTimer: 0, scale: 1 };
+    const particles = [];
+    let floatText = null;
+    let chewTimer = 0;
+
+    const spawnFruit = (minX) => {
+      fruit.x = minX + 220 + Math.random() * 120;
+      fruit.y = 125 + Math.sin(fruit.x * 0.022) * 18;
+      fruit.eaten = false;
+      fruit.scale = 0;
+    };
 
     const renderHero = () => {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-      const pal = (typeof Themes !== 'undefined') ? Themes.getPalette() : {
-        crest: '#E4D6FF',
-        body: '#BFA5FF',
-        shade: '#9875E6',
-        belly: '#F4EEFF',
-        blush: '#FF85A1',
-        eyePupil: '#1E1B24',
-        tongue: '#FF777D'
-      };
+      // 1. Lush Pastel Landscape Environment
+      // Sky gradient
+      const skyGrad = ctx.createLinearGradient(0, 0, 0, canvas.height);
+      skyGrad.addColorStop(0, '#E0F2FE');
+      skyGrad.addColorStop(0.55, '#F0FDF4');
+      skyGrad.addColorStop(1, '#DCFCE7');
+      ctx.fillStyle = skyGrad;
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-      // Friendly subtle pastel grid in hero
-      ctx.strokeStyle = pal.gridLine || 'rgba(191, 165, 255, 0.12)';
-      ctx.lineWidth = 1;
-      for (let x = 0; x < canvas.width; x += 16) {
+      // Sun glow in upper right
+      const sunGrad = ctx.createRadialGradient(530, 25, 5, 530, 25, 75);
+      sunGrad.addColorStop(0, 'rgba(254, 240, 138, 0.7)');
+      sunGrad.addColorStop(0.5, 'rgba(254, 240, 138, 0.25)');
+      sunGrad.addColorStop(1, 'rgba(254, 240, 138, 0)');
+      ctx.fillStyle = sunGrad;
+      ctx.beginPath();
+      ctx.arc(530, 25, 75, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Background gentle rolling hills
+      ctx.fillStyle = '#BBF7D0';
+      ctx.beginPath();
+      ctx.moveTo(0, canvas.height);
+      ctx.lineTo(0, 160);
+      ctx.bezierCurveTo(150, 140, 280, 175, 420, 150);
+      ctx.bezierCurveTo(490, 138, 560, 148, canvas.width, 142);
+      ctx.lineTo(canvas.width, canvas.height);
+      ctx.closePath();
+      ctx.fill();
+
+      // Foreground lush meadow hill
+      ctx.fillStyle = '#86EFAC';
+      ctx.beginPath();
+      ctx.moveTo(0, canvas.height);
+      ctx.lineTo(0, 185);
+      ctx.bezierCurveTo(120, 170, 240, 192, 380, 175);
+      ctx.bezierCurveTo(480, 162, 550, 182, canvas.width, 172);
+      ctx.lineTo(canvas.width, canvas.height);
+      ctx.closePath();
+      ctx.fill();
+
+      // Daisies & grass tufts along meadow
+      const flowers = [70, 180, 290, 410, 520];
+      flowers.forEach((fx, fi) => {
+        const fy = 176 + Math.sin(fx * 0.05 + fi) * 8;
+        const sway = Math.sin(t * 2.5 + fi) * 2;
+        ctx.fillStyle = '#FFFFFF';
         ctx.beginPath();
-        ctx.moveTo(x, 0);
-        ctx.lineTo(x, canvas.height);
-        ctx.stroke();
-      }
-      for (let y = 0; y < canvas.height; y += 16) {
+        ctx.arc(fx + sway - 2.5, fy, 2.5, 0, Math.PI * 2);
+        ctx.arc(fx + sway + 2.5, fy, 2.5, 0, Math.PI * 2);
+        ctx.arc(fx + sway, fy - 2.5, 2.5, 0, Math.PI * 2);
+        ctx.arc(fx + sway, fy + 2.5, 2.5, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = '#FBBF24';
         ctx.beginPath();
-        ctx.moveTo(0, y);
-        ctx.lineTo(canvas.width, y);
-        ctx.stroke();
+        ctx.arc(fx + sway, fy, 2.2, 0, Math.PI * 2);
+        ctx.fill();
+      });
+
+      // 2. Floating Clouds (Drifting smoothly)
+      clouds.forEach(cloud => {
+        cloud.x += cloud.speed;
+        if (cloud.x > canvas.width + 80) cloud.x = -80;
+
+        ctx.save();
+        ctx.translate(cloud.x, cloud.y);
+        ctx.scale(cloud.scale, cloud.scale);
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.88)';
+        ctx.shadowColor = 'rgba(186, 230, 253, 0.4)';
+        ctx.shadowBlur = 8;
+        ctx.beginPath();
+        ctx.arc(-22, 0, 15, 0, Math.PI * 2);
+        ctx.arc(0, -9, 20, 0, Math.PI * 2);
+        ctx.arc(22, 0, 15, 0, Math.PI * 2);
+        ctx.arc(0, 6, 17, 0, Math.PI * 2);
+        ctx.closePath();
+        ctx.fill();
+        ctx.restore();
+      });
+
+      // 3. Twinkling Golden Stars
+      stars.forEach(st => {
+        const pulse = 0.5 + 0.5 * Math.sin(t * 3.5 + st.phase);
+        ctx.save();
+        ctx.translate(st.x, st.y);
+        ctx.fillStyle = `rgba(245, 158, 11, ${0.4 + 0.5 * pulse})`;
+        ctx.beginPath();
+        const r = st.size * (0.8 + 0.4 * pulse);
+        ctx.moveTo(0, -r);
+        ctx.quadraticCurveTo(0, 0, r, 0);
+        ctx.quadraticCurveTo(0, 0, 0, r);
+        ctx.quadraticCurveTo(0, 0, -r, 0);
+        ctx.quadraticCurveTo(0, 0, 0, -r);
+        ctx.closePath();
+        ctx.fill();
+        ctx.restore();
+      });
+
+      // 4. Floating Breeze Leaves
+      leaves.forEach(leaf => {
+        leaf.x += leaf.speed;
+        leaf.rot += leaf.rotSpeed;
+        if (leaf.x > canvas.width + 40) leaf.x = -30;
+        const leafY = leaf.y + Math.sin(t * 2 + leaf.phase) * leaf.amp;
+
+        ctx.save();
+        ctx.translate(leaf.x, leafY);
+        ctx.rotate(leaf.rot);
+        ctx.fillStyle = '#4ADE80';
+        ctx.beginPath();
+        ctx.ellipse(0, 0, 8, 4, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+      });
+
+      // 5. Interactive Fruit & Collision
+      if (!fruit.eaten) {
+        if (fruit.scale < 1) fruit.scale = Math.min(1, fruit.scale + 0.05);
+
+        ctx.save();
+        ctx.translate(fruit.x, fruit.y);
+        ctx.scale(fruit.scale, fruit.scale);
+        const floatBob = Math.sin(t * 4) * 3;
+
+        // Ground shadow under fruit
+        ctx.fillStyle = 'rgba(22, 101, 52, 0.18)';
+        ctx.beginPath();
+        ctx.ellipse(0, 16, 12, 4.5, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Strawberry body
+        ctx.translate(0, floatBob);
+        ctx.fillStyle = '#EF4444';
+        ctx.beginPath();
+        ctx.moveTo(0, -11);
+        ctx.bezierCurveTo(12, -11, 14, 5, 0, 14);
+        ctx.bezierCurveTo(-14, 5, -12, -11, 0, -11);
+        ctx.closePath();
+        ctx.fill();
+
+        // Strawberry seeds
+        ctx.fillStyle = '#FEF08A';
+        [[-4, -3], [4, -3], [0, 3], [-3, 7], [3, 7]].forEach(([sx, sy]) => {
+          ctx.beginPath();
+          ctx.arc(sx, sy, 1.1, 0, Math.PI * 2);
+          ctx.fill();
+        });
+
+        // Glossy fruit shine
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.65)';
+        ctx.beginPath();
+        ctx.ellipse(-4, -5, 3.5, 1.8, -Math.PI / 4, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Green strawberry leaves on top
+        ctx.fillStyle = '#22C55E';
+        ctx.beginPath();
+        ctx.moveTo(0, -11);
+        ctx.lineTo(-7, -15);
+        ctx.lineTo(-2, -12);
+        ctx.lineTo(0, -17);
+        ctx.lineTo(2, -12);
+        ctx.lineTo(7, -15);
+        ctx.closePath();
+        ctx.fill();
+
+        ctx.restore();
+      } else {
+        fruit.respawnTimer--;
       }
 
-      // Sine-wave slithering snake
-      const segments = 16;
-      const spacing = 11;
-      const centerY = canvas.height / 2;
-      const snakeLength = segments * spacing; // 176px
-      const loopWidth = canvas.width + snakeLength + 100; // Continuous travel span before looping
-      const headOffset = ((t * 55) % loopWidth + loopWidth) % loopWidth;
-      const headX = headOffset - 50; // Starts fully offscreen left (-50px)
+      // 6. Cartoon Green Snake Mascot Animation
+      const segments = 14;
+      const spacing = 18;
+      const snakeLength = segments * spacing;
+      const loopWidth = canvas.width + snakeLength + 120;
+      const headOffset = ((t * 68) % loopWidth + loopWidth) % loopWidth;
+      const headX = headOffset - 60;
+      const centerY = 125;
 
       const pts = [];
       for (let i = 0; i <= segments; i++) {
-        // Continuous positions strictly behind the head - no separate per-segment modulo
         const segX = headX - (i * spacing);
-        const segY = centerY + Math.sin((segX * 0.038) + t * 3.5) * 16;
+        const segY = centerY + Math.sin(segX * 0.024 + t * 2.8) * 20;
         pts.push({ x: segX, y: segY });
       }
 
-      // Draw continuous cute body bridge
+      const headPt = pts[0];
+      const prevPt = pts[1] || headPt;
+      const headAngle = Math.atan2(headPt.y - prevPt.y, headPt.x - prevPt.x);
+
+      // Check fruit proximity
+      const distToFruit = (!fruit.eaten) ? Math.hypot(headPt.x - fruit.x, headPt.y - fruit.y) : 999;
+      let mouthOpen = 0;
+      if (!fruit.eaten && distToFruit < 55) {
+        mouthOpen = Math.min(1, (55 - distToFruit) / 35);
+      }
+
+      // Check eating collision
+      if (!fruit.eaten && distToFruit < 18) {
+        fruit.eaten = true;
+        fruit.respawnTimer = 160;
+        chewTimer = 65;
+
+        // Sparkle burst particles
+        for (let k = 0; k < 10; k++) {
+          const pAngle = (k / 10) * Math.PI * 2;
+          const pSpeed = 2 + Math.random() * 2.5;
+          particles.push({
+            x: fruit.x,
+            y: fruit.y,
+            vx: Math.cos(pAngle) * pSpeed,
+            vy: Math.sin(pAngle) * pSpeed - 1.2,
+            color: (k % 2 === 0) ? '#EF4444' : '#FBBF24',
+            size: 3.5 + Math.random() * 2.5,
+            life: 30,
+            maxLife: 30
+          });
+        }
+
+        // Floating "+10" score bubble
+        floatText = { text: '+10', x: fruit.x, y: fruit.y - 14, alpha: 1.0 };
+      }
+
+      if (fruit.eaten && fruit.respawnTimer <= 0) {
+        spawnFruit(headX);
+      }
+
+      if (chewTimer > 0) chewTimer--;
+
+      // Render burst particles
+      for (let pIdx = particles.length - 1; pIdx >= 0; pIdx--) {
+        const p = particles[pIdx];
+        p.x += p.vx;
+        p.y += p.vy;
+        p.vy += 0.12;
+        p.life--;
+        const pAlpha = p.life / p.maxLife;
+
+        ctx.fillStyle = p.color;
+        ctx.globalAlpha = pAlpha;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.size * pAlpha, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.globalAlpha = 1.0;
+
+        if (p.life <= 0) particles.splice(pIdx, 1);
+      }
+
+      // Render floating "+10" text
+      if (floatText) {
+        floatText.y -= 0.8;
+        floatText.alpha -= 0.022;
+        if (floatText.alpha > 0) {
+          ctx.save();
+          ctx.font = '800 16px "Outfit", sans-serif';
+          ctx.fillStyle = `rgba(34, 197, 94, ${floatText.alpha})`;
+          ctx.shadowColor = 'rgba(255, 255, 255, 0.9)';
+          ctx.shadowBlur = 6;
+          ctx.fillText(floatText.text, floatText.x - 12, floatText.y);
+          ctx.restore();
+        } else {
+          floatText = null;
+        }
+      }
+
+      // Draw Continuous Seamless Cartoon Body Bridge
       for (let i = segments; i > 0; i--) {
         const p1 = pts[i];
         const p2 = pts[i - 1];
+        if (Math.hypot(p1.x - p2.x, p1.y - p2.y) > spacing * 2.2) continue;
 
-        // Guard against any possible discontinuity
-        if (Math.hypot(p1.x - p2.x, p1.y - p2.y) > spacing * 2.2) {
-          continue;
-        }
-
-        const width = 13 * (1 - (i / (segments + 4)) * 0.45);
+        const bodyWidth = 26 * (1 - (i / (segments + 4)) * 0.45);
 
         ctx.save();
-        ctx.strokeStyle = pal.shade || '#9875E6';
-        ctx.lineWidth = width + 1.5;
+        ctx.shadowColor = 'rgba(22, 101, 52, 0.18)';
+        ctx.shadowBlur = 10;
+        ctx.shadowOffsetY = 5;
+
+        // Bottom shade layer
+        ctx.strokeStyle = '#26850E';
+        ctx.lineWidth = bodyWidth + 2.5;
         ctx.lineCap = 'round';
         ctx.beginPath();
         ctx.moveTo(p1.x, p1.y);
         ctx.lineTo(p2.x, p2.y);
         ctx.stroke();
 
-        ctx.strokeStyle = pal.body || '#BFA5FF';
-        ctx.lineWidth = width;
+        // Main juicy green body layer
+        ctx.shadowBlur = 0;
+        ctx.strokeStyle = '#4ECB23';
+        ctx.lineWidth = bodyWidth;
         ctx.stroke();
+
+        // Cream yellow underbelly line
+        ctx.strokeStyle = '#FFF3A3';
+        ctx.lineWidth = bodyWidth * 0.42;
+        ctx.stroke();
+
         ctx.restore();
       }
 
-      // Draw plump rounded segments & cute face
+      // Draw Plump 3D Cartoon Segments & Head
+      const pal = {
+        crest: '#85EA46',
+        body: '#4ECB23',
+        shade: '#26850E',
+        belly: '#FFF3A3',
+        blush: '#FF7E98',
+        tongue: '#FF6B8B',
+        eyePupil: '#1E1B24'
+      };
+
       for (let i = segments; i >= 0; i--) {
         const pt = pts[i];
         const isHead = (i === 0);
-        const taper = 1 - (i / segments) * 0.55;
-        const radius = isHead ? 8.5 : Math.max(3, 6.5 * taper);
+        const taper = 1 - (i / segments) * 0.58;
+        const radius = isHead ? 17 : Math.max(5.5, 14 * taper);
 
         ctx.save();
         ctx.translate(pt.x, pt.y);
 
         if (isHead) {
-          const prev = pts[1] || pt;
-          const angle = Math.atan2(pt.y - prev.y, pt.x - prev.x);
-          ctx.rotate(angle);
+          ctx.rotate(headAngle);
 
-          // Animated flicking pink tongue
-          const tongueFlick = Math.sin(t * 12);
-          if (tongueFlick > 0.4) {
+          // Subtle squash & stretch during chew
+          if (chewTimer > 0) {
+            const chewBounce = Math.sin(chewTimer * 0.35) * 0.14;
+            ctx.scale(1.0 - chewBounce, 1.0 + chewBounce);
+          }
+
+          // Animated pink tongue
+          const tongueCycle = Math.sin(t * 10);
+          if (mouthOpen < 0.2 && chewTimer === 0 && tongueCycle > 0.45) {
             ctx.save();
-            ctx.strokeStyle = pal.tongue || '#FF777D';
-            ctx.lineWidth = 1.8;
+            ctx.strokeStyle = pal.tongue;
+            ctx.lineWidth = 2.4;
             ctx.lineCap = 'round';
+            const tLen = 12 + Math.sin(t * 24) * 2;
             ctx.beginPath();
-            ctx.moveTo(radius + 1, 0);
-            ctx.lineTo(radius + 9, Math.sin(t * 30) * 1.5);
-            ctx.lineTo(radius + 13, -2.5);
-            ctx.moveTo(radius + 9, Math.sin(t * 30) * 1.5);
-            ctx.lineTo(radius + 13, 2.5);
+            ctx.moveTo(radius + 2, 0);
+            ctx.lineTo(radius + tLen, 0);
+            ctx.lineTo(radius + tLen + 4, -3);
+            ctx.moveTo(radius + tLen, 0);
+            ctx.lineTo(radius + tLen + 4, 3);
             ctx.stroke();
             ctx.restore();
           }
 
-          // Cute rounded head
-          ctx.shadowColor = 'rgba(48, 45, 53, 0.14)';
-          ctx.shadowBlur = 8;
-          ctx.fillStyle = pal.body || '#BFA5FF';
+          // Cartoon Green Head Base
+          ctx.shadowColor = 'rgba(22, 101, 52, 0.22)';
+          ctx.shadowBlur = 12;
+          ctx.shadowOffsetY = 4;
+
+          const headGrad = ctx.createRadialGradient(-radius * 0.2, -radius * 0.3, 2, 0, 0, radius * 1.3);
+          headGrad.addColorStop(0, pal.crest);
+          headGrad.addColorStop(0.5, pal.body);
+          headGrad.addColorStop(1, pal.shade);
+
+          ctx.fillStyle = headGrad;
           ctx.beginPath();
-          ctx.ellipse(0, 0, radius * 1.25, radius, 0, 0, Math.PI * 2);
+          ctx.ellipse(2, 0, radius * 1.3, radius, 0, 0, Math.PI * 2);
           ctx.fill();
 
           ctx.shadowBlur = 0;
-          ctx.strokeStyle = pal.shade || '#825ECC';
-          ctx.lineWidth = 1.2;
+          ctx.strokeStyle = pal.shade;
+          ctx.lineWidth = 1.8;
           ctx.stroke();
 
-          // Rosy Pink Blush
-          ctx.fillStyle = pal.blush || '#FF85A1';
+          // Light Cream-Yellow Belly on Head Bottom
+          ctx.fillStyle = pal.belly;
+          ctx.beginPath();
+          ctx.ellipse(0, radius * 0.38, radius * 0.9, radius * 0.45, 0, 0, Math.PI);
+          ctx.fill();
+
+          // Rosy Pink Blush Cheeks
+          ctx.fillStyle = (chewTimer > 0) ? '#FF5C80' : pal.blush;
           [-1, 1].forEach(side => {
             ctx.beginPath();
-            ctx.arc(radius * 0.1, radius * 0.58 * side, 2.4, 0, Math.PI * 2);
+            ctx.ellipse(radius * 0.05, radius * 0.62 * side, 5, 3.5, 0, 0, Math.PI * 2);
             ctx.fill();
           });
 
-          // Large Expressive Cartoon Eyes with Double Shine
+          // Small Nostrils
+          ctx.fillStyle = 'rgba(38, 133, 14, 0.65)';
           [-1, 1].forEach(side => {
-            const ey = radius * 0.38 * side;
-            // Eye socket
-            ctx.fillStyle = '#FFFFFF';
             ctx.beginPath();
-            ctx.arc(radius * 0.28, ey, 3.2, 0, Math.PI * 2);
-            ctx.fill();
-
-            // Pupil
-            ctx.fillStyle = pal.eyePupil || '#1E1B24';
-            ctx.beginPath();
-            ctx.arc(radius * 0.32, ey, 2.3, 0, Math.PI * 2);
-            ctx.fill();
-
-            // Catchlights
-            ctx.fillStyle = '#FFFFFF';
-            ctx.beginPath();
-            ctx.arc(radius * 0.24, ey - 0.7 * side, 1.0, 0, Math.PI * 2);
-            ctx.arc(radius * 0.38, ey + 0.7 * side, 0.5, 0, Math.PI * 2);
+            ctx.arc(radius * 0.85, 3.2 * side, 1.3, 0, Math.PI * 2);
             ctx.fill();
           });
+
+          // Mouth & Smile / Eating Chomp
+          if (mouthOpen > 0.2 || chewTimer > 0) {
+            const openAmt = Math.max(mouthOpen, (chewTimer > 0 ? 0.6 : 0));
+            ctx.fillStyle = '#991B1B';
+            ctx.beginPath();
+            ctx.ellipse(radius * 0.7, 0, 6 * openAmt, 5 * openAmt, 0, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.fillStyle = '#FFFFFF';
+            ctx.beginPath();
+            ctx.arc(radius * 0.7, -3 * openAmt, 1.5, 0, Math.PI * 2);
+            ctx.fill();
+          } else {
+            ctx.strokeStyle = '#26850E';
+            ctx.lineWidth = 1.6;
+            ctx.lineCap = 'round';
+            ctx.beginPath();
+            ctx.arc(radius * 0.55, 0, 5, -Math.PI / 3, Math.PI / 3);
+            ctx.stroke();
+          }
+
+          // Large Expressive Anime Cartoon Eyes
+          const blinkCycle = (t * 60) % 220;
+          const isBlinking = blinkCycle < 10;
+          const isHappy = (chewTimer > 0);
+
+          [-1, 1].forEach(side => {
+            const eyeX = radius * 0.32;
+            const eyeY = radius * 0.44 * side;
+            const eyeRadius = 6.2;
+
+            if (isHappy) {
+              ctx.strokeStyle = pal.eyePupil;
+              ctx.lineWidth = 2.4;
+              ctx.lineCap = 'round';
+              ctx.beginPath();
+              ctx.arc(eyeX, eyeY, eyeRadius * 0.75, Math.PI * 1.15, Math.PI * 1.85);
+              ctx.stroke();
+            } else if (isBlinking) {
+              ctx.strokeStyle = pal.eyePupil;
+              ctx.lineWidth = 2.2;
+              ctx.lineCap = 'round';
+              ctx.beginPath();
+              ctx.arc(eyeX, eyeY, eyeRadius * 0.7, 0.2, Math.PI - 0.2);
+              ctx.stroke();
+            } else {
+              ctx.fillStyle = '#FFFFFF';
+              ctx.beginPath();
+              ctx.arc(eyeX, eyeY, eyeRadius, 0, Math.PI * 2);
+              ctx.fill();
+
+              const pupilOffset = mouthOpen > 0.3 ? 1.2 : 0.4;
+              ctx.fillStyle = pal.eyePupil;
+              ctx.beginPath();
+              ctx.arc(eyeX + pupilOffset, eyeY, eyeRadius * 0.75, 0, Math.PI * 2);
+              ctx.fill();
+
+              ctx.fillStyle = '#FFFFFF';
+              ctx.beginPath();
+              ctx.arc(eyeX + pupilOffset - 1.8, eyeY - 1.8 * side, 2.2, 0, Math.PI * 2);
+              ctx.arc(eyeX + pupilOffset + 1.8, eyeY + 1.8 * side, 1.2, 0, Math.PI * 2);
+              ctx.fill();
+            }
+          });
+
+          // Snout Top Gloss Shine
+          ctx.fillStyle = 'rgba(255, 255, 255, 0.72)';
+          ctx.beginPath();
+          ctx.ellipse(radius * 0.4, 0, 6, 2.8, 0, 0, Math.PI * 2);
+          ctx.fill();
+
         } else {
-          // Plump Body Segment with 3D Radial Pastel Highlight
+          // Plump 3D Body Segment with Radial Green Gradient
           const grad = ctx.createRadialGradient(-radius * 0.25, -radius * 0.3, 1, 0, 0, radius);
-          grad.addColorStop(0, pal.crest || '#E4D6FF');
-          grad.addColorStop(0.5, pal.body || '#BFA5FF');
-          grad.addColorStop(1, pal.shade || '#9875E6');
+          grad.addColorStop(0, pal.crest);
+          grad.addColorStop(0.5, pal.body);
+          grad.addColorStop(1, pal.shade);
+
           ctx.fillStyle = grad;
           ctx.beginPath();
-          ctx.ellipse(0, 0, radius * 1.1, radius, 0, 0, Math.PI * 2);
+          ctx.ellipse(0, 0, radius * 1.15, radius, 0, 0, Math.PI * 2);
           ctx.fill();
 
-          // Specular shine dot
+          // Light Cream-Yellow Belly Arc
+          ctx.fillStyle = pal.belly;
+          ctx.beginPath();
+          ctx.ellipse(0, radius * 0.34, radius * 0.78, radius * 0.4, 0, 0, Math.PI);
+          ctx.fill();
+
+          // Glossy Curved Specular Highlight
           ctx.fillStyle = 'rgba(255, 255, 255, 0.65)';
           ctx.beginPath();
-          ctx.arc(-radius * 0.25, -radius * 0.35, radius * 0.26, 0, Math.PI * 2);
+          ctx.ellipse(-radius * 0.25, -radius * 0.4, radius * 0.42, radius * 0.2, -Math.PI / 8, 0, Math.PI * 2);
           ctx.fill();
 
-          // Pointed tail tip
+          // Tapered rounded tail tip
           if (i === segments) {
             const prev = pts[segments - 1] || pt;
             const tailAngle = Math.atan2(pt.y - prev.y, pt.x - prev.x);
             ctx.save();
             ctx.rotate(tailAngle);
-            ctx.fillStyle = pal.body || '#BFA5FF';
+            ctx.fillStyle = pal.body;
             ctx.beginPath();
-            ctx.moveTo(0, -radius * 0.45);
-            ctx.lineTo(-radius * 1.4, 0);
-            ctx.lineTo(0, radius * 0.45);
+            ctx.moveTo(0, -radius * 0.4);
+            ctx.lineTo(-radius * 1.6, 0);
+            ctx.lineTo(0, radius * 0.4);
             ctx.closePath();
             ctx.fill();
             ctx.restore();
@@ -857,6 +1216,10 @@ const UI = (() => {
         els.screenGame.classList.add('active');
         document.body.classList.add('in-game');
         window.scrollTo(0, 0);
+        if (heroAnimationId) {
+          cancelAnimationFrame(heroAnimationId);
+          heroAnimationId = null;
+        }
       } else {
         els.screenGame.classList.remove('active');
         els.screenHome.classList.add('active');
@@ -865,6 +1228,7 @@ const UI = (() => {
         this.updatePlayerProfile();
         this.updateHomeModeBanner();
         this.updateBestScoreDisplay();
+        initHeroCanvas();
       }
     },
 

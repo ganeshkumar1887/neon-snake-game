@@ -37,6 +37,7 @@ class Snake {
     this.targetAngle = 0;
     this.inputQueue = [];
     this.pendingGrowth = 0;
+    this.eatTime = 0;
     this.isDead = false;
   }
 
@@ -95,6 +96,7 @@ class Snake {
 
   grow(amount = 1) {
     this.pendingGrowth += amount;
+    this.eatTime = performance.now();
   }
 
   checkWallCollision() {
@@ -129,18 +131,23 @@ class Snake {
 
     // Palette resolution from active theme
     const pal = (typeof Themes !== 'undefined') ? Themes.getPalette() : {
-      crest: '#8effcb',
-      body: '#00ff88',
-      shade: '#00853e',
-      belly: '#03210d',
-      scaleStroke: 'rgba(0, 242, 254, 0.5)',
-      scaleFillEven: 'rgba(0, 242, 254, 0.25)',
-      scaleFillOdd: 'rgba(0, 255, 136, 0.2)',
-      eyeCornea: '#ffdd00',
-      eyePupil: '#100c00',
-      eyeHighlight: '#ffffff',
-      tongue: '#ff3366'
+      crest: '#85EA46',
+      body: '#4ECB23',
+      shade: '#26850E',
+      belly: '#FFF58A',
+      scaleStroke: 'rgba(255, 255, 255, 0.65)',
+      scaleFillEven: '#FFF58A',
+      scaleFillOdd: '#85EA46',
+      blush: '#FF7E98',
+      eyeCornea: '#302D35',
+      eyePupil: '#1E1B24',
+      eyeHighlight: '#FFFFFF',
+      tongue: '#FF6B8B'
     };
+
+    const isEating = (time - this.eatTime < 450);
+    const eatProgress = isEating ? (time - this.eatTime) / 450 : 0;
+    const chompScale = isEating ? Math.sin(eatProgress * Math.PI) : 0;
 
     // Smooth head turning angle interpolation
     const angleDiff = Math.atan2(
@@ -277,12 +284,10 @@ class Snake {
       ctx.ellipse(0, 0, radius * 1.12, radius, 0, 0, Math.PI * 2);
       ctx.fill();
 
-      // B. Cute Pastel Belly / Accent Ring
-      ctx.fillStyle = (i % 2 === 0)
-        ? (pal.scaleFillEven || 'rgba(169, 231, 236, 0.55)')
-        : (pal.scaleFillOdd || 'rgba(169, 237, 176, 0.55)');
+      // B. Cute Cream-Yellow Belly Underbelly Arc
+      ctx.fillStyle = pal.belly || '#FFF58A';
       ctx.beginPath();
-      ctx.ellipse(0, radius * 0.25, radius * 0.65, radius * 0.42, 0, 0, Math.PI);
+      ctx.ellipse(0, radius * 0.32, radius * 0.76, radius * 0.4, 0, 0, Math.PI);
       ctx.fill();
 
       // C. Glossy Catchlight Reflection (Like a smooth jelly or vinyl toy)
@@ -307,8 +312,8 @@ class Snake {
         ctx.translate(tailPt.x, tailPt.y);
         ctx.rotate(tailAngle);
 
-        ctx.fillStyle = pal.body || '#BFA5FF';
-        ctx.shadowColor = 'rgba(48, 45, 53, 0.12)';
+        ctx.fillStyle = pal.body || '#4ECB23';
+        ctx.shadowColor = 'rgba(22, 101, 52, 0.18)';
         ctx.shadowBlur = 6;
         ctx.beginPath();
         ctx.moveTo(0, -cellSize * 0.15);
@@ -326,27 +331,27 @@ class Snake {
     ctx.translate(headPt.x, headPt.y);
     ctx.rotate(this.currentAngle);
 
-    this.drawRealisticHead(ctx, cellSize, time, pal);
+    this.drawRealisticHead(ctx, cellSize, time, pal, isEating, chompScale);
 
     ctx.restore();
     ctx.restore();
   }
 
   // Draw cute, friendly, expressive cartoon snake head
-  drawRealisticHead(ctx, cellSize, time, pal) {
+  drawRealisticHead(ctx, cellSize, time, pal, isEating = false, chompScale = 0) {
     const headLen = cellSize * 0.76;
     const headWidth = cellSize * 0.64;
 
     // --- A. Animated Cute Pink Tongue ---
     const tongueCycle = (time % 2200);
-    if (tongueCycle < 550) {
+    if (!isEating && tongueCycle < 550) {
       const progress = Math.sin((tongueCycle / 550) * Math.PI);
       const tLen = cellSize * (0.35 + progress * 0.55);
       const wag = Math.sin(time * 0.04) * (cellSize * 0.08);
 
       ctx.save();
-      ctx.strokeStyle = pal.tongue || '#FF777D';
-      ctx.lineWidth = 2.0;
+      ctx.strokeStyle = pal.tongue || '#FF6B8B';
+      ctx.lineWidth = 2.2;
       ctx.lineCap = 'round';
 
       // Base tongue shaft
@@ -370,12 +375,16 @@ class Snake {
       ctx.restore();
     }
 
-    // --- B. Cute Rounded Head Shape ---
+    // --- B. Cute Rounded Head Shape & Squash/Stretch ---
     ctx.save();
     // Gentle soft drop shadow
-    ctx.shadowColor = 'rgba(48, 45, 53, 0.16)';
+    ctx.shadowColor = 'rgba(22, 101, 52, 0.22)';
     ctx.shadowBlur = 10;
     ctx.shadowOffsetY = 2;
+
+    if (isEating) {
+      ctx.scale(1.0 + chompScale * 0.16, 1.0 - chompScale * 0.1);
+    }
 
     ctx.beginPath();
     ctx.moveTo(headLen * 0.62, 0); // Snout tip
@@ -399,37 +408,67 @@ class Snake {
     );
     ctx.closePath();
 
-    // 3D Head Gradient (Soft, smooth, friendly)
+    // 3D Head Gradient (Soft, smooth, friendly green)
     const headGrad = ctx.createRadialGradient(
       headLen * 0.1, -headWidth * 0.15, cellSize * 0.1,
       0, 0, headLen * 0.85
     );
-    headGrad.addColorStop(0, pal.crest || '#E4D6FF');
-    headGrad.addColorStop(0.4, pal.body || '#BFA5FF');
-    headGrad.addColorStop(1, pal.shade || '#9875E6');
+    headGrad.addColorStop(0, pal.crest || '#85EA46');
+    headGrad.addColorStop(0.45, pal.body || '#4ECB23');
+    headGrad.addColorStop(1, pal.shade || '#26850E');
 
     ctx.fillStyle = headGrad;
     ctx.fill();
 
     // Head outline (crisp subtle line)
     ctx.shadowBlur = 0;
-    ctx.strokeStyle = pal.shade || '#825ECC';
+    ctx.strokeStyle = pal.shade || '#26850E';
     ctx.lineWidth = 1.6;
     ctx.stroke();
+
+    // Light Cream-Yellow Belly on Head Bottom
+    ctx.fillStyle = pal.belly || '#FFF58A';
+    ctx.beginPath();
+    ctx.ellipse(0, headWidth * 0.32, headLen * 0.75, headWidth * 0.36, 0, 0, Math.PI);
+    ctx.fill();
 
     // --- C. Rosy Pink Blush Cheeks ---
     const blushX = headLen * 0.08;
     const blushY = headWidth * 0.48;
     const blushR = cellSize * 0.14;
 
-    ctx.fillStyle = pal.blush || '#FF85A1';
+    ctx.fillStyle = isEating ? '#FF5C80' : (pal.blush || '#FF7E98');
     [-1, 1].forEach(side => {
       ctx.beginPath();
-      ctx.ellipse(blushX, blushY * side, blushR * 1.25, blushR * 0.85, 0, 0, Math.PI * 2);
+      ctx.ellipse(blushX, blushY * side, blushR * (isEating ? 1.4 : 1.25), blushR * 0.85, 0, 0, Math.PI * 2);
       ctx.fill();
     });
 
-    // --- D. Large Expressive Anime/Cartoon Eyes ---
+    // --- D. Mouth & Smile / Eating Chomp ---
+    if (isEating) {
+      // Happy open chomp mouth
+      ctx.fillStyle = '#991B1B';
+      ctx.beginPath();
+      ctx.ellipse(headLen * 0.45, 0, headLen * 0.22 * chompScale, headWidth * 0.26 * chompScale, 0, 0, Math.PI * 2);
+      ctx.fill();
+      // Tiny white tooth
+      ctx.fillStyle = '#FFFFFF';
+      ctx.beginPath();
+      ctx.arc(headLen * 0.45, -headWidth * 0.12 * chompScale, cellSize * 0.045, 0, Math.PI * 2);
+      ctx.fill();
+    } else {
+      // Subtle happy snout smile curve
+      ctx.strokeStyle = pal.shade || '#26850E';
+      ctx.lineWidth = 1.4;
+      ctx.beginPath();
+      ctx.arc(headLen * 0.38, 0, headWidth * 0.16, -Math.PI / 3, Math.PI / 3);
+      ctx.stroke();
+    }
+
+    // --- E. Large Expressive Cartoon Eyes (with Blinking & Happy Eating) ---
+    const blinkCycle = (time % 3600);
+    const isBlinking = blinkCycle < 140;
+
     const eyeX = headLen * 0.16;
     const eyeY = headWidth * 0.36;
     const eyeRadius = cellSize * 0.16;
@@ -437,46 +476,57 @@ class Snake {
     [-1, 1].forEach(side => {
       const curY = eyeY * side;
 
-      // 1. Clean eye white socket
-      ctx.fillStyle = '#FFFFFF';
-      ctx.beginPath();
-      ctx.arc(eyeX, curY, eyeRadius, 0, Math.PI * 2);
-      ctx.fill();
+      if (isEating) {
+        // Cheerful smiling crescent eye (^ ^)
+        ctx.strokeStyle = pal.eyePupil || '#1E1B24';
+        ctx.lineWidth = 2.4;
+        ctx.lineCap = 'round';
+        ctx.beginPath();
+        ctx.arc(eyeX, curY, eyeRadius * 0.75, Math.PI * 1.15, Math.PI * 1.85);
+        ctx.stroke();
+      } else if (isBlinking) {
+        // Closed blinking eyelid arc
+        ctx.strokeStyle = pal.eyePupil || '#1E1B24';
+        ctx.lineWidth = 2.0;
+        ctx.lineCap = 'round';
+        ctx.beginPath();
+        ctx.arc(eyeX, curY, eyeRadius * 0.7, 0.2, Math.PI - 0.2);
+        ctx.stroke();
+      } else {
+        // 1. Clean eye white socket
+        ctx.fillStyle = '#FFFFFF';
+        ctx.beginPath();
+        ctx.arc(eyeX, curY, eyeRadius, 0, Math.PI * 2);
+        ctx.fill();
 
-      // 2. Large cute dark pupil
-      ctx.fillStyle = pal.eyePupil || '#1E1B24';
-      ctx.beginPath();
-      ctx.arc(eyeX + 0.5, curY, eyeRadius * 0.78, 0, Math.PI * 2);
-      ctx.fill();
+        // 2. Large cute dark pupil
+        ctx.fillStyle = pal.eyePupil || '#1E1B24';
+        ctx.beginPath();
+        ctx.arc(eyeX + 0.5, curY, eyeRadius * 0.78, 0, Math.PI * 2);
+        ctx.fill();
 
-      // 3. Primary White Catchlight Highlight (Top-left shine)
-      ctx.fillStyle = '#FFFFFF';
-      ctx.beginPath();
-      ctx.arc(eyeX - eyeRadius * 0.22, curY - eyeRadius * 0.25 * side, eyeRadius * 0.34, 0, Math.PI * 2);
-      ctx.fill();
+        // 3. Primary White Catchlight Highlight (Top-left shine)
+        ctx.fillStyle = '#FFFFFF';
+        ctx.beginPath();
+        ctx.arc(eyeX - eyeRadius * 0.22, curY - eyeRadius * 0.25 * side, eyeRadius * 0.34, 0, Math.PI * 2);
+        ctx.fill();
 
-      // 4. Secondary Tiny Sparkle Catchlight (Bottom-right)
-      ctx.beginPath();
-      ctx.arc(eyeX + eyeRadius * 0.32, curY + eyeRadius * 0.3 * side, eyeRadius * 0.18, 0, Math.PI * 2);
-      ctx.fill();
+        // 4. Secondary Tiny Sparkle Catchlight (Bottom-right)
+        ctx.beginPath();
+        ctx.arc(eyeX + eyeRadius * 0.32, curY + eyeRadius * 0.3 * side, eyeRadius * 0.18, 0, Math.PI * 2);
+        ctx.fill();
+      }
     });
 
-    // --- E. Cute Tiny Snout Details ---
-    ctx.fillStyle = 'rgba(48, 45, 53, 0.4)';
+    // --- F. Cute Tiny Nostrils ---
+    ctx.fillStyle = 'rgba(38, 133, 14, 0.65)';
     [-1, 1].forEach(side => {
       ctx.beginPath();
-      ctx.arc(headLen * 0.5, headWidth * 0.12 * side, 1.2, 0, Math.PI * 2);
+      ctx.arc(headLen * 0.52, headWidth * 0.12 * side, 1.2, 0, Math.PI * 2);
       ctx.fill();
     });
 
-    // Subtle happy snout smile curve
-    ctx.strokeStyle = 'rgba(48, 45, 53, 0.35)';
-    ctx.lineWidth = 1.2;
-    ctx.beginPath();
-    ctx.arc(headLen * 0.38, 0, headWidth * 0.15, -Math.PI / 3, Math.PI / 3);
-    ctx.stroke();
-
-    // --- F. Snout Top Gloss Shine ---
+    // --- G. Snout Top Gloss Shine ---
     ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
     ctx.beginPath();
     ctx.ellipse(headLen * 0.38, 0, cellSize * 0.12, cellSize * 0.05, 0, 0, Math.PI * 2);
