@@ -887,11 +887,11 @@ const UI = (() => {
       if (els.homeModeBest) els.homeModeBest.textContent = String(best).padStart(4, '0');
 
       // Update badges on all 4 mode cards on Home screen
-      if (els.cardBadgeInfinity) els.cardBadgeInfinity.textContent = `BEST: ${Storage.getModeBestScore('infinity')}`;
-      if (els.cardBadgeClassic) els.cardBadgeClassic.textContent = `BEST: ${Storage.getModeBestScore('classic')}`;
-      if (els.cardBadgeTime) els.cardBadgeTime.textContent = `RECORD: ${Storage.getModeBestScore('timeAttack')}`;
+      if (els.cardBadgeInfinity) els.cardBadgeInfinity.textContent = `Best: ${Storage.getModeBestScore('infinity')}`;
+      if (els.cardBadgeClassic) els.cardBadgeClassic.textContent = `Best: ${Storage.getModeBestScore('classic')}`;
+      if (els.cardBadgeTime) els.cardBadgeTime.textContent = `Best: ${Storage.getModeBestScore('timeAttack')}`;
       const stats = Storage.getStats();
-      if (els.cardBadgeObstacle) els.cardBadgeObstacle.textContent = `STAGES: ${stats.obstacleLevelsCompleted || 0}`;
+      if (els.cardBadgeObstacle) els.cardBadgeObstacle.textContent = `Best: ${stats.obstacleLevelsCompleted || 0}`;
     },
 
     // Configure HUD for current mode

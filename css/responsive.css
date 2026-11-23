@@ -346,34 +346,51 @@
 
   .home-cards-grid {
     grid-template-columns: repeat(2, 1fr);
-    gap: 6px;
+    gap: 13px;
   }
 
   .home-card-item {
-    padding: 0.65rem 0.65rem;
-    border-radius: 16px;
+    aspect-ratio: 1 / 1;
+    border-radius: 26px;
+    padding: 12px 11px 11px 11px;
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.06);
   }
 
   .card-top {
-    gap: 0.3rem;
+    width: 100%;
   }
 
   .card-icon-wrap {
-    width: 28px;
-    height: 28px;
+    width: 36px;
+    height: 36px;
+    border-radius: 12px;
+  }
+
+  .svg-card-icon {
+    width: 20px;
+    height: 20px;
   }
 
   .card-title {
-    font-size: 0.82rem;
+    font-size: 0.88rem;
+    line-height: 1.15;
   }
 
   .card-desc {
-    font-size: 0.64rem;
+    font-size: 0.68rem;
+    line-height: 1.2;
   }
 
   .card-badge, .card-badge-pill {
-    font-size: 0.58rem;
-    padding: 0.12rem 0.35rem;
+    font-size: 0.68rem;
+    padding: 2px 7px;
+    border-radius: 9px;
+  }
+
+  .card-check {
+    width: 18px;
+    height: 18px;
+    font-size: 0.6rem;
   }
 
   .home-mode-banner {
