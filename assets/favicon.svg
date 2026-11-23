@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <rect width="64" height="64" rx="18" fill="#FFF9E9"/>
+  <!-- Cute lavender snake -->
+  <path d="M16 44 L32 44 A12 12 0 0 0 44 32 A12 12 0 0 0 32 20 L20 20" fill="none" stroke="#BFA5FF" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+  <!-- Cheerful eyes -->
+  <circle cx="21" cy="18" r="3" fill="#302D35"/>
+  <circle cx="20.2" cy="17" r="1.1" fill="#FFFFFF"/>
+  <!-- Rosy blush -->
+  <circle cx="26" cy="22" r="2.2" fill="#FF85A1"/>
+  <!-- Fruit collectible -->
+  <circle cx="46" cy="46" r="5" fill="#FF777D"/>
+  <ellipse cx="48" cy="41" rx="2" ry="1" fill="#4ADE80"/>
+</svg>
