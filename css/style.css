@@ -68,9 +68,9 @@
   --neon-gold: #F59E0B;
   --neon-gold-glow: rgba(245, 158, 11, 0.35);
 
-  /* Typography */
-  --font-display: 'Fredoka', 'Nunito', system-ui, -apple-system, sans-serif;
-  --font-body: 'Nunito', 'Fredoka', system-ui, -apple-system, sans-serif;
+  /* Typography: Professional Modern Gaming Sans */
+  --font-display: 'Outfit', 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+  --font-body: 'Plus Jakarta Sans', 'Outfit', system-ui, -apple-system, sans-serif;
 
   /* Shadows */
   --shadow-sm: 0 4px 10px rgba(48, 45, 53, 0.05);
@@ -307,7 +307,8 @@ html, body {
   font-weight: 800;
   line-height: 1.1;
   color: var(--color-dark);
-  letter-spacing: -0.5px;
+  letter-spacing: 0.5px;
+  word-spacing: 2px;
 }
 
 .game-subtag {
@@ -545,20 +546,27 @@ html, body {
 
 .card-title {
   font-family: var(--font-display);
-  font-size: 0.96rem;
-  font-weight: 800;
-  color: #24212D;
+  font-size: 1.04rem;
+  font-weight: 700;
+  color: #1F1B27;
   margin: 0;
-  line-height: 1.15;
-  letter-spacing: -0.2px;
+  line-height: 1.2;
+  letter-spacing: 0.8px;
+  word-spacing: 3px;
+  text-transform: uppercase;
+  -webkit-font-smoothing: antialiased;
 }
 
 .card-desc {
-  font-size: 0.72rem;
-  font-weight: 600;
-  color: rgba(36, 33, 45, 0.68);
-  margin: 0;
-  line-height: 1.2;
+  font-family: var(--font-body);
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: #4D4759;
+  margin: 3px 0 0 0;
+  line-height: 1.25;
+  letter-spacing: 0.25px;
+  word-spacing: 1.5px;
+  -webkit-font-smoothing: antialiased;
 }
 
 .card-bottom {
@@ -570,15 +578,19 @@ html, body {
 
 .card-badge, .card-badge-pill {
   font-family: var(--font-display);
-  font-size: 0.72rem;
-  font-weight: 700;
-  padding: 3px 9px;
-  border-radius: 10px;
-  background: rgba(0, 0, 0, 0.08);
-  color: #24212D;
-  border: 1px solid rgba(0, 0, 0, 0.04);
+  font-size: 0.78rem;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.75);
+  color: #1F1B27;
+  border: 1px solid rgba(255, 255, 255, 0.65);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+  letter-spacing: 0.4px;
+  word-spacing: 2px;
   line-height: 1.2;
   width: fit-content;
+  -webkit-font-smoothing: antialiased;
 }
 
 .card-check {
