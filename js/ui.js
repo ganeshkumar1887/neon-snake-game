@@ -753,32 +753,26 @@ const UI = (() => {
   };
 
   const initLoadingSequence = () => {
-    if (!els.screenLoading) {
-      initHeroCanvas();
-      return;
-    }
-
-    // Start mascot canvas animation
-    initHeroCanvas();
+    if (!els.screenLoading) return;
 
     let progress = 0;
     const tips = [
       { at: 0, text: 'Waking up the happy snake...' },
-      { at: 24, text: 'Planting fresh strawberries...' },
-      { at: 50, text: 'Preparing Adventure Worlds...' },
-      { at: 75, text: 'Polishing candy & ice mazes...' },
+      { at: 22, text: 'Planting fresh strawberries...' },
+      { at: 48, text: 'Preparing Adventure Worlds...' },
+      { at: 74, text: 'Polishing candy & ice mazes...' },
       { at: 94, text: 'Ready to Slither!' }
     ];
 
     const startTime = performance.now();
-    const duration = 1850; // Smooth 1.85s casual arcade game intro
+    const duration = 3800; // Comfortable ~3.8s casual arcade loading speed
 
     const updateLoader = (now) => {
       if (loadingCompleted) return;
       const elapsed = now - startTime;
       const tNorm = Math.min(1, elapsed / duration);
-      // Easing: ease-out quad for swift start and pleasant finish
-      progress = Math.min(100, Math.round((1 - Math.pow(1 - tNorm, 2.2)) * 100));
+      // Smooth natural progression curve
+      progress = Math.min(100, Math.round((1 - Math.pow(1 - tNorm, 1.6)) * 100));
 
       if (els.loadingBarFill) {
         els.loadingBarFill.style.width = `${progress}%`;
@@ -800,7 +794,7 @@ const UI = (() => {
       if (tNorm < 1) {
         requestAnimationFrame(updateLoader);
       } else {
-        setTimeout(completeLoadingScreen, 220);
+        setTimeout(completeLoadingScreen, 260);
       }
     };
 
