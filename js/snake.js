@@ -38,7 +38,13 @@ class Snake {
     this.inputQueue = [];
     this.pendingGrowth = 0;
     this.eatTime = 0;
+    this.surprisedUntil = 0;
     this.isDead = false;
+  }
+
+  // Set cute surprised expression (when near hazard, picking powerup or rescuing baby)
+  setSurprised(durationMs = 850) {
+    this.surprisedUntil = performance.now() + durationMs;
   }
 
   // Queue a directional turn (prevents direct 180-degree reversal)
@@ -129,8 +135,8 @@ class Snake {
     const time = performance.now();
     ctx.save();
 
-    // Palette resolution from active theme
-    const pal = (typeof Themes !== 'undefined') ? Themes.getPalette() : {
+    // Palette resolution from active theme combined with Fashion Studio skin
+    let pal = (typeof Themes !== 'undefined') ? Themes.getPalette() : {
       crest: '#85EA46',
       body: '#4ECB23',
       shade: '#26850E',
@@ -145,9 +151,25 @@ class Snake {
       tongue: '#FF6B8B'
     };
 
+    if (typeof FashionStudio !== 'undefined') {
+      const customColors = FashionStudio.getActiveColors();
+      if (customColors) {
+        pal = { ...pal, ...customColors };
+      }
+    }
+
+    const activePattern = (typeof FashionStudio !== 'undefined') ? FashionStudio.getActivePattern() : 'pattern_smooth';
+    const activeHat = (typeof FashionStudio !== 'undefined') ? FashionStudio.getActiveHat() : 'hat_none';
+
+    // Ghost Mode power-up transparency
+    if (typeof PowerUpManager !== 'undefined' && PowerUpManager.hasGhostMode()) {
+      ctx.globalAlpha = 0.52;
+    }
+
     const isEating = (time - this.eatTime < 450);
     const eatProgress = isEating ? (time - this.eatTime) / 450 : 0;
     const chompScale = isEating ? Math.sin(eatProgress * Math.PI) : 0;
+    const isSurprised = (time < this.surprisedUntil);
 
     // Smooth head turning angle interpolation
     const angleDiff = Math.atan2(
@@ -296,6 +318,26 @@ class Snake {
       ctx.ellipse(-radius * 0.25, -radius * 0.4, radius * 0.36, radius * 0.18, -Math.PI / 8, 0, Math.PI * 2);
       ctx.fill();
 
+      // D. Custom Fashion Body Pattern Overlays
+      if (activePattern === 'pattern_stripes' && i % 2 === 0) {
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.45)';
+        ctx.beginPath();
+        ctx.ellipse(0, 0, radius * 0.4, radius * 0.95, 0, 0, Math.PI * 2);
+        ctx.fill();
+      } else if (activePattern === 'pattern_spots') {
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.55)';
+        ctx.beginPath();
+        ctx.arc(0, -radius * 0.35, radius * 0.22, 0, Math.PI * 2);
+        ctx.arc(0, radius * 0.35, radius * 0.22, 0, Math.PI * 2);
+        ctx.fill();
+      } else if (activePattern === 'pattern_rings') {
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.75)';
+        ctx.lineWidth = 1.8;
+        ctx.beginPath();
+        ctx.ellipse(0, 0, radius * 0.82, radius * 0.72, 0, 0, Math.PI * 2);
+        ctx.stroke();
+      }
+
       ctx.restore();
     }
 
@@ -331,14 +373,30 @@ class Snake {
     ctx.translate(headPt.x, headPt.y);
     ctx.rotate(this.currentAngle);
 
-    this.drawRealisticHead(ctx, cellSize, time, pal, isEating, chompScale);
+    this.drawRealisticHead(ctx, cellSize, time, pal, isEating, chompScale, isSurprised);
+
+    // Wearable Hat / Accessories from Fashion Studio
+    if (typeof FashionStudio !== 'undefined') {
+      FashionStudio.drawHatOnHead(ctx, cellSize, activeHat, time);
+    }
+
+    // Evolution Prestige Features (Horns, Crest, Jewels)
+    if (typeof SnakeEvolution !== 'undefined') {
+      SnakeEvolution.drawEvolutionFeatures(ctx, cellSize, time);
+    }
 
     ctx.restore();
+
+    // Active Power-up Auras (Protective Shield Bubble, Speed Sparks)
+    if (typeof PowerUpManager !== 'undefined') {
+      PowerUpManager.drawSnakeAura(ctx, cellSize, headPt);
+    }
+
     ctx.restore();
   }
 
   // Draw cute, friendly, expressive cartoon snake head
-  drawRealisticHead(ctx, cellSize, time, pal, isEating = false, chompScale = 0) {
+  drawRealisticHead(ctx, cellSize, time, pal, isEating = false, chompScale = 0, isSurprised = false) {
     const headLen = cellSize * 0.76;
     const headWidth = cellSize * 0.64;
 
@@ -444,7 +502,7 @@ class Snake {
       ctx.fill();
     });
 
-    // --- D. Mouth & Smile / Eating Chomp ---
+    // --- D. Mouth & Smile / Eating Chomp / Surprised ---
     if (isEating) {
       // Happy open chomp mouth
       ctx.fillStyle = '#991B1B';
@@ -456,6 +514,15 @@ class Snake {
       ctx.beginPath();
       ctx.arc(headLen * 0.45, -headWidth * 0.12 * chompScale, cellSize * 0.045, 0, Math.PI * 2);
       ctx.fill();
+    } else if (isSurprised) {
+      // Cute round surprised mouth "o"
+      ctx.fillStyle = '#991B1B';
+      ctx.beginPath();
+      ctx.ellipse(headLen * 0.42, 0, headLen * 0.12, headWidth * 0.16, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = '#FFFFFF';
+      ctx.lineWidth = 1.2;
+      ctx.stroke();
     } else {
       // Subtle happy snout smile curve
       ctx.strokeStyle = pal.shade || '#26850E';
@@ -465,7 +532,7 @@ class Snake {
       ctx.stroke();
     }
 
-    // --- E. Large Expressive Cartoon Eyes (with Blinking & Happy Eating) ---
+    // --- E. Large Expressive Cartoon Eyes (with Blinking, Surprise & Happy Eating) ---
     const blinkCycle = (time % 3600);
     const isBlinking = blinkCycle < 140;
 
@@ -484,6 +551,25 @@ class Snake {
         ctx.beginPath();
         ctx.arc(eyeX, curY, eyeRadius * 0.75, Math.PI * 1.15, Math.PI * 1.85);
         ctx.stroke();
+      } else if (isSurprised) {
+        // Wide surprised cartoon eyes (O O)
+        ctx.fillStyle = '#FFFFFF';
+        ctx.beginPath();
+        ctx.arc(eyeX, curY, eyeRadius * 1.22, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.strokeStyle = pal.shade || '#26850E';
+        ctx.lineWidth = 1.4;
+        ctx.stroke();
+
+        ctx.fillStyle = pal.eyePupil || '#1E1B24';
+        ctx.beginPath();
+        ctx.arc(eyeX, curY, eyeRadius * 0.72, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.fillStyle = '#FFFFFF';
+        ctx.beginPath();
+        ctx.arc(eyeX - eyeRadius * 0.25, curY - eyeRadius * 0.25 * side, eyeRadius * 0.36, 0, Math.PI * 2);
+        ctx.fill();
       } else if (isBlinking) {
         // Closed blinking eyelid arc
         ctx.strokeStyle = pal.eyePupil || '#1E1B24';

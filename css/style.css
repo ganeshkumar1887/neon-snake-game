@@ -2116,3 +2116,702 @@ input:checked + .slider:before {
   font-weight: 800;
 }
 
+/* ==========================================================================
+   ADVENTURE WORLDS, POWER-UPS, FASHION STUDIO & KIDS CASUAL ARCADE STYLING
+   ========================================================================== */
+
+/* Header Coins Pill & Evolution Badge */
+.header-coins-pill {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  background: #FFFBEB;
+  border: 1.5px solid #FDE68A;
+  border-radius: 20px;
+  padding: 0.32rem 0.65rem;
+  cursor: pointer;
+  transition: transform 0.15s ease, background 0.15s ease;
+}
+.header-coins-pill:hover {
+  transform: translateY(-2px);
+  background: #FEF3C7;
+  border-color: #F59E0B;
+}
+.coin-icon-svg {
+  width: 16px;
+  height: 16px;
+  display: inline-flex;
+  align-items: center;
+}
+.coin-icon-svg svg {
+  width: 100%;
+  height: 100%;
+}
+.coins-val-text {
+  font-family: var(--font-display);
+  font-size: 0.82rem;
+  font-weight: 800;
+  color: #B45309;
+}
+
+.header-evolution-pill {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  background: #F0FDF4;
+  border: 1.5px solid #BBF7D0;
+  border-radius: 20px;
+  padding: 0.32rem 0.65rem;
+  cursor: pointer;
+  transition: transform 0.15s ease, background 0.15s ease;
+}
+.header-evolution-pill:hover {
+  transform: translateY(-2px);
+  background: #DCFCE7;
+}
+.evolution-icon-svg {
+  width: 15px;
+  height: 15px;
+  display: inline-flex;
+  align-items: center;
+}
+.evolution-icon-svg svg {
+  width: 100%;
+  height: 100%;
+}
+.evolution-text {
+  font-family: var(--font-display);
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #15803D;
+  max-width: 85px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Home Card Palettes: Adventure & Fashion */
+.card-coral {
+  background: linear-gradient(145deg, #FF9E9E 0%, #FF6B72 100%);
+  box-shadow: 0 8px 20px rgba(255, 107, 114, 0.38), 0 2px 6px rgba(0, 0, 0, 0.04);
+}
+.card-coral .card-icon-wrap {
+  color: #991B1B;
+}
+
+.card-fashion {
+  background: linear-gradient(145deg, #D8B4FE 0%, #C084FC 100%);
+  box-shadow: 0 8px 20px rgba(192, 132, 252, 0.38), 0 2px 6px rgba(0, 0, 0, 0.04);
+}
+.card-fashion .card-icon-wrap {
+  color: #6B21A8;
+}
+
+.card-badge-pill.highlight {
+  background: #FFFFFF;
+  color: #DC2626;
+  font-weight: 800;
+  border-color: #FECACA;
+}
+
+.nav-pill-highlight {
+  background: linear-gradient(135deg, #FFE4E6 0%, #FECDD3 100%) !important;
+  border-color: #FDA4AF !important;
+  color: #BE123C !important;
+  font-weight: 800;
+}
+
+/* Adventure Mission HUD Banner */
+.hud-adventure-mission {
+  max-width: min(74vh, 760px);
+  width: 100%;
+  margin: 0 auto 0.5rem auto;
+  background: rgba(255, 255, 255, 0.94);
+  border: 2px solid #FBCFE8;
+  border-radius: 16px;
+  padding: 0.5rem 0.9rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  box-shadow: 0 4px 12px rgba(244, 63, 94, 0.12);
+  backdrop-filter: blur(8px);
+}
+.mission-info-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.mission-quest-icon {
+  font-size: 1rem;
+}
+.mission-text {
+  font-family: var(--font-display);
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #881337;
+}
+.mission-bar-wrap {
+  width: 100%;
+  height: 8px;
+  background: #FCE7F3;
+  border-radius: 999px;
+  overflow: hidden;
+}
+.mission-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #F43F5E, #EC4899);
+  border-radius: 999px;
+  transition: width 0.3s ease;
+}
+
+/* Power-Ups In-Game Bar */
+.hud-powerups-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  max-width: min(74vh, 760px);
+  width: 100%;
+  margin: 0 auto 0.4rem auto;
+  justify-content: center;
+}
+.hud-powerup-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 12px;
+  background: #FFFFFF;
+  border: 1.5px solid #E2E8F0;
+  font-family: var(--font-display);
+  font-size: 0.72rem;
+  font-weight: 800;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  position: relative;
+  overflow: hidden;
+}
+.hud-powerup-badge.powerup-shield { border-color: #38BDF8; color: #0284C7; }
+.hud-powerup-badge.powerup-speed { border-color: #F59E0B; color: #D97706; }
+.hud-powerup-badge.powerup-slow { border-color: #818CF8; color: #4F46E5; }
+.hud-powerup-badge.powerup-magnet { border-color: #EC4899; color: #DB2777; }
+.hud-powerup-badge.powerup-doubleCoins { border-color: #EAB308; color: #CA8A04; }
+.hud-powerup-badge.powerup-ghost { border-color: #C084FC; color: #9333EA; }
+.powerup-timer-ring {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  height: 3px;
+  background: currentColor;
+  opacity: 0.7;
+}
+
+/* Ghost Rival Score Delta */
+.hud-ghost-pill {
+  position: absolute;
+  top: 10px;
+  right: 12px;
+  z-index: 10;
+  font-family: var(--font-display);
+  font-size: 0.75rem;
+  font-weight: 800;
+  padding: 4px 10px;
+  border-radius: 12px;
+  backdrop-filter: blur(6px);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+.hud-ghost-pill.ghost-ahead {
+  background: rgba(220, 252, 231, 0.92);
+  border: 1.5px solid #86EFAC;
+  color: #15803D;
+}
+.hud-ghost-pill.ghost-behind {
+  background: rgba(254, 226, 226, 0.92);
+  border: 1.5px solid #FCA5A5;
+  color: #B91C1C;
+}
+
+/* Adventure World Modal */
+.adventure-worlds-list {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.adventure-world-card {
+  border-radius: 20px;
+  background: #FFFFFF;
+  border: 2px solid #EADBFF;
+  overflow: hidden;
+  box-shadow: 0 4px 14px rgba(0,0,0,0.05);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+.adventure-world-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+}
+.adventure-world-card.locked {
+  opacity: 0.7;
+}
+.world-card-header {
+  padding: 0.85rem 1rem;
+}
+.world-card-top-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 2px;
+}
+.world-badge-tag {
+  font-family: var(--font-display);
+  font-size: 0.65rem;
+  font-weight: 800;
+  padding: 2px 8px;
+  border-radius: 8px;
+  letter-spacing: 0.8px;
+}
+.world-card-title {
+  font-family: var(--font-display);
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: #1E1B24;
+}
+.world-card-tagline {
+  font-size: 0.75rem;
+  color: #4B5563;
+}
+.world-card-body {
+  padding: 0.75rem 1rem;
+  background: #FAF7FF;
+}
+.adventure-levels-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 8px;
+}
+.adventure-level-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5rem 0.2rem;
+  background: #FFFFFF;
+  border: 1.5px solid #D8B4FE;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: transform 0.12s ease, background 0.12s ease;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.04);
+}
+.adventure-level-btn:hover:not(.disabled) {
+  transform: scale(1.05);
+  background: #F3E8FF;
+  border-color: #A855F7;
+}
+.adventure-level-btn.disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  background: #F1F5F9;
+  border-color: #CBD5E1;
+}
+.adventure-level-btn .lvl-num {
+  font-family: var(--font-display);
+  font-size: 0.72rem;
+  font-weight: 800;
+  color: #1E1B24;
+}
+.adventure-level-btn .lvl-stars {
+  font-size: 0.7rem;
+  color: #F59E0B;
+}
+.world-locked-hint {
+  padding: 0.5rem;
+  text-align: center;
+  font-size: 0.78rem;
+  color: #64748B;
+}
+
+/* Fashion Studio Modal */
+.fashion-studio-body {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.fashion-preview-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(180deg, #F5F3FF 0%, #EDE9FE 100%);
+  border: 2px dashed #C4B5FD;
+  border-radius: 20px;
+  padding: 0.75rem;
+  position: relative;
+}
+.fashion-preview-canvas {
+  display: block;
+}
+.fashion-coins-tag {
+  margin-top: 4px;
+  font-family: var(--font-display);
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: #6B21A8;
+  background: #FFFFFF;
+  padding: 3px 12px;
+  border-radius: 12px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.06);
+}
+.fashion-tabs-row {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+}
+.fashion-tab-btn {
+  font-family: var(--font-display);
+  font-size: 0.78rem;
+  font-weight: 800;
+  padding: 0.45rem 1.1rem;
+  border-radius: 14px;
+  border: 1.5px solid #EADBFF;
+  background: #FAF7FF;
+  color: #4B5563;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.fashion-tab-btn.active {
+  background: #8B5CF6;
+  color: #FFFFFF;
+  border-color: #7C3AED;
+  box-shadow: 0 4px 10px rgba(139, 92, 246, 0.35);
+}
+.fashion-items-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+  max-height: 250px;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+.fashion-item-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.65rem 0.8rem;
+  background: #FFFFFF;
+  border: 1.5px solid #E5E7EB;
+  border-radius: 16px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.04);
+  transition: transform 0.12s ease;
+}
+.fashion-item-card.equipped {
+  border-color: #8B5CF6;
+  background: #F5F3FF;
+  box-shadow: 0 0 0 1.5px #8B5CF6;
+}
+.fashion-preview-color {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.fashion-preview-badge {
+  font-family: var(--font-display);
+  font-size: 0.65rem;
+  font-weight: 800;
+  padding: 4px 6px;
+  background: #F3E8FF;
+  border-radius: 8px;
+  color: #6B21A8;
+  text-align: center;
+}
+.fashion-item-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+  margin-left: 8px;
+}
+.fashion-item-title {
+  font-family: var(--font-display);
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #1F2937;
+}
+.fashion-item-price {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: #D97706;
+}
+.btn-fashion-action {
+  font-family: var(--font-display);
+  font-size: 0.7rem;
+  font-weight: 800;
+  padding: 0.4rem 0.75rem;
+  border-radius: 12px;
+  border: none;
+  cursor: pointer;
+  transition: transform 0.1s ease;
+}
+.btn-fashion-action.btn-buy {
+  background: #FEF3C7;
+  color: #B45309;
+  border: 1px solid #FCD34D;
+}
+.btn-fashion-action.btn-equip {
+  background: #E0E7FF;
+  color: #4338CA;
+  border: 1px solid #C7D2FE;
+}
+.btn-fashion-action.btn-equipped {
+  background: #DCFCE7;
+  color: #15803D;
+  border: 1px solid #86EFAC;
+  cursor: default;
+}
+
+/* Daily Rewards & Missions */
+.daily-streak-section, .daily-missions-section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+.daily-streak-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 6px;
+}
+.streak-day-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5rem 0.2rem;
+  background: #FAF7FF;
+  border: 1.5px solid #EADBFF;
+  border-radius: 12px;
+  font-family: var(--font-display);
+  text-align: center;
+  transition: transform 0.12s ease;
+}
+.streak-day-card.today {
+  background: #FFFBEB;
+  border-color: #F59E0B;
+  box-shadow: 0 4px 10px rgba(245, 158, 11, 0.25);
+  transform: scale(1.05);
+}
+.streak-day-card.done {
+  background: #F0FDF4;
+  border-color: #86EFAC;
+}
+.streak-day-label {
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: #6B7280;
+}
+.streak-day-coin {
+  font-size: 0.72rem;
+  font-weight: 800;
+  color: #D97706;
+  margin: 2px 0;
+}
+.streak-check, .streak-claimed, .streak-ready {
+  font-size: 0.6rem;
+  font-weight: 800;
+}
+.streak-check { color: #16A34A; }
+.streak-claimed { color: #9CA3AF; }
+.streak-ready { color: #D97706; animation: pulse-ready 1.5s infinite; }
+@keyframes pulse-ready {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+.btn-claim-streak {
+  margin-top: 4px;
+  width: 100%;
+}
+.daily-missions-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.daily-mission-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.65rem 0.85rem;
+  background: #FFFFFF;
+  border: 1.5px solid #E5E7EB;
+  border-radius: 16px;
+  gap: 10px;
+}
+.daily-mission-item.ready {
+  border-color: #F59E0B;
+  background: #FFFDF5;
+}
+.daily-mission-item.claimed {
+  opacity: 0.6;
+}
+.mission-text-col {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  flex: 1;
+}
+.mission-title {
+  font-family: var(--font-display);
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: #1F2937;
+}
+.mission-desc {
+  font-size: 0.72rem;
+  color: #6B7280;
+}
+.mission-progress-bar {
+  width: 100%;
+  height: 6px;
+  background: #E5E7EB;
+  border-radius: 999px;
+  overflow: hidden;
+  margin-top: 2px;
+}
+.mission-progress-fill {
+  height: 100%;
+  background: #8B5CF6;
+  border-radius: 999px;
+}
+.btn-claim-mission {
+  font-family: var(--font-display);
+  font-size: 0.72rem;
+  font-weight: 800;
+  padding: 0.45rem 0.8rem;
+  border-radius: 12px;
+  border: none;
+  cursor: pointer;
+}
+.btn-claim-mission.ready {
+  background: #F59E0B;
+  color: #FFFFFF;
+  box-shadow: 0 2px 8px rgba(245, 158, 11, 0.4);
+}
+.btn-claim-mission.disabled {
+  background: #E5E7EB;
+  color: #9CA3AF;
+  cursor: not-allowed;
+}
+.btn-claim-mission.claimed {
+  background: #DCFCE7;
+  color: #15803D;
+  cursor: default;
+}
+
+/* Level Victory & Evolution Celebration Modals */
+.victory-card, .evolution-card {
+  text-align: center;
+  padding: 1.5rem;
+}
+.victory-ribbon, .evolution-ribbon {
+  display: inline-block;
+  font-family: var(--font-display);
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 1.5px;
+  padding: 3px 12px;
+  border-radius: 12px;
+  background: #FEF3C7;
+  color: #B45309;
+  border: 1px solid #FDE68A;
+  margin-bottom: 6px;
+}
+.victory-world-title, .evolution-stage-title {
+  font-family: var(--font-display);
+  font-size: 1.3rem;
+  font-weight: 800;
+  color: #1F2937;
+}
+.victory-mission-name, .evolution-stage-desc {
+  font-size: 0.82rem;
+  color: #6B7280;
+  margin-top: 2px;
+}
+.victory-stars-row {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin: 1rem 0;
+}
+.victory-star {
+  font-size: 2.2rem;
+  line-height: 1;
+}
+.victory-star.earned {
+  color: #F59E0B;
+  text-shadow: 0 4px 12px rgba(245, 158, 11, 0.45);
+  animation: star-pop 0.35s ease;
+}
+.victory-star.empty {
+  color: #D1D5DB;
+}
+@keyframes star-pop {
+  0% { transform: scale(0); opacity: 0; }
+  70% { transform: scale(1.2); }
+  100% { transform: scale(1); opacity: 1; }
+}
+.victory-rewards-box {
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+  background: #FAF7FF;
+  border: 1.5px solid #EADBFF;
+  border-radius: 16px;
+  padding: 0.85rem;
+  margin-bottom: 1rem;
+}
+.victory-stat-item {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.victory-stat-item .v-label {
+  font-family: var(--font-display);
+  font-size: 0.65rem;
+  font-weight: 800;
+  color: #9CA3AF;
+}
+.victory-stat-item .v-value {
+  font-family: var(--font-display);
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: #1F2937;
+}
+.victory-stat-item .coin-text {
+  color: #D97706;
+}
+.victory-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+}
+.evolution-sparkles {
+  font-size: 1.5rem;
+  margin-bottom: 4px;
+}
+.evolution-perk-box {
+  background: #F0FDF4;
+  border: 1.5px solid #BBF7D0;
+  border-radius: 16px;
+  padding: 0.9rem;
+  margin: 1rem 0;
+}
+.evolution-perk-label {
+  font-family: var(--font-display);
+  font-size: 0.68rem;
+  font-weight: 800;
+  color: #15803D;
+  letter-spacing: 1px;
+}
+.evolution-perk-text {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #166534;
+  margin-top: 4px;
+}
+

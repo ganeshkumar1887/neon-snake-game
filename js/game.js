@@ -108,8 +108,14 @@ const Game = (() => {
       speedUp = (level - 1) * 3.5;
     }
 
-    const calculated = (base - speedUp) / speedModifier;
-    return Math.max(42, calculated);
+    let calculated = (base - speedUp) / speedModifier;
+
+    // Power-Up speed multiplier (Speed Boost = 1.45x, Slow Motion = 0.6x)
+    if (typeof PowerUpManager !== 'undefined') {
+      calculated = calculated / PowerUpManager.getSpeedMultiplier();
+    }
+
+    return Math.max(38, calculated);
   };
 
   // Calculate speed multiplier for HUD display
@@ -193,8 +199,14 @@ const Game = (() => {
     const pal = Themes.getPalette();
     const settings = Storage.getSettings();
 
-    // Board background fill
-    ctx.fillStyle = pal.boardBg || '#FFFDF8';
+    // Board background fill with Adventure World canvas palette support
+    let bgFill = pal.boardBg || '#FFFDF8';
+    if (currentMode && currentMode.isAdventure && typeof AdventureWorld !== 'undefined') {
+      const world = AdventureWorld.getCurrentWorld();
+      if (world && world.canvasBg) bgFill = world.canvasBg;
+    }
+
+    ctx.fillStyle = bgFill;
     ctx.fillRect(0, 0, width, height);
 
     // Subtle Grid Lines
@@ -274,34 +286,85 @@ const Game = (() => {
 
     snake.move();
 
-    // 1. Check Wall Collision (skipped if wrapWalls is active)
+    // 1. Check Wall Collision (skipped if wrapWalls or Ghost Mode is active)
     if (snake.checkWallCollision()) {
-      handleGameOver('wall');
-      return;
-    }
-
-    // 2. Check Self Collision
-    if (snake.checkSelfCollision()) {
-      handleGameOver('self');
-      return;
-    }
-
-    // 3. Check Obstacle Collision (in Obstacle Mode)
-    const head = snake.segments[0];
-    if (currentMode && currentMode.hasObstacles) {
-      if (ObstaclesManager.checkCollision(head)) {
-        handleGameOver('obstacle');
+      if (typeof PowerUpManager !== 'undefined' && PowerUpManager.hasGhostMode()) {
+        // Ghost mode ignores wall impact
+      } else if (typeof PowerUpManager !== 'undefined' && PowerUpManager.consumeShield()) {
+        snake.setSurprised(800);
+      } else {
+        handleGameOver('wall');
         return;
       }
     }
 
-    // 4. Check Food Collision
+    // 2. Check Self Collision
+    if (snake.checkSelfCollision()) {
+      if (typeof PowerUpManager !== 'undefined' && PowerUpManager.hasGhostMode()) {
+        // Ghost mode ignores self collision
+      } else if (typeof PowerUpManager !== 'undefined' && PowerUpManager.consumeShield()) {
+        snake.setSurprised(800);
+      } else {
+        handleGameOver('self');
+        return;
+      }
+    }
+
+    const head = snake.segments[0];
+
+    // 3. Check Obstacle Collision
+    if (currentMode && currentMode.hasObstacles) {
+      if (ObstaclesManager.checkCollision(head)) {
+        if (typeof PowerUpManager !== 'undefined' && PowerUpManager.hasGhostMode()) {
+          // Ghost mode passes through obstacle
+        } else if (typeof PowerUpManager !== 'undefined' && PowerUpManager.consumeShield()) {
+          snake.setSurprised(800);
+        } else {
+          handleGameOver('obstacle');
+          return;
+        }
+      }
+    }
+
+    // 4. Check Power-Up Collision
+    if (typeof PowerUpManager !== 'undefined') {
+      const picked = PowerUpManager.checkCollision(head);
+      if (picked) {
+        snake.setSurprised(650);
+        if (currentMode && currentMode.isAdventure && typeof AdventureWorld !== 'undefined') {
+          AdventureWorld.recordPowerupCollected();
+        }
+      }
+    }
+
+    // 5. Baby Snake Rescue
+    if (currentMode && currentMode.isAdventure && typeof AdventureWorld !== 'undefined') {
+      AdventureWorld.onSnakeMove(head, snake.segments[snake.segments.length - 1]);
+    }
+
+    // 6. Record Ghost Rival step
+    if (typeof GhostRival !== 'undefined') {
+      GhostRival.recordStep(head.x, head.y, score, totalElapsedPlayTime);
+    }
+
+    // 7. Check Food Collision
     const eaten = foodManager.checkCollision(head);
 
     if (eaten) {
       snake.grow(1);
       score += eaten.points;
       foodEatenCount++;
+
+      // Virtual coins & evolution XP & daily mission
+      const coinMul = (typeof PowerUpManager !== 'undefined' && PowerUpManager.hasDoubleCoins()) ? 2 : 1;
+      const coinsEarned = (eaten.type === 'bonus' ? 6 : 2) * coinMul;
+      if (typeof Storage !== 'undefined') Storage.addCoins(coinsEarned);
+      if (typeof SnakeEvolution !== 'undefined') SnakeEvolution.addExp(eaten.type === 'bonus' ? 5 : 2);
+      if (typeof DailySystem !== 'undefined') DailySystem.recordEvent('food', 1);
+
+      if (currentMode && currentMode.isAdventure && typeof AdventureWorld !== 'undefined') {
+        AdventureWorld.recordFruitEaten();
+      }
 
       const pal = Themes.getPalette();
 
@@ -321,7 +384,7 @@ const Game = (() => {
       }
 
       // Check level progression (every 50 points in non-obstacle modes)
-      if (!currentMode || !currentMode.hasObstacles) {
+      if (!currentMode || (!currentMode.hasObstacles && !currentMode.isAdventure)) {
         const newLevel = Math.floor(score / 50) + 1;
         if (newLevel > level) {
           level = newLevel;
@@ -330,13 +393,21 @@ const Game = (() => {
       }
 
       // Obstacle Mode Stage Clearance Check
-      if (currentMode && currentMode.hasObstacles) {
+      if (currentMode && currentMode.hasObstacles && !currentMode.isAdventure) {
         obstacleFoodCollected++;
         const target = currentMode.targetFoodPerLevel || 5;
         UI.updateObstacleProgress(obstacleFoodCollected, target);
 
         if (obstacleFoodCollected >= target) {
           handleObstacleLevelClear();
+          return;
+        }
+      }
+
+      // Adventure Mode Mission Completion Check
+      if (currentMode && currentMode.isAdventure && typeof AdventureWorld !== 'undefined') {
+        if (AdventureWorld.checkMissionStatus(score)) {
+          handleAdventureLevelClear();
           return;
         }
       }
@@ -352,6 +423,36 @@ const Game = (() => {
 
       checkAchievements();
     }
+  };
+
+  // Handle Level Cleared in Adventure World
+  const handleAdventureLevelClear = () => {
+    currentState = STATES.LEVEL_TRANSITION;
+    SoundEngine.stopBGM();
+    SoundEngine.playLevelClear();
+
+    const mission = AdventureWorld.getCurrentMission();
+    const stars = AdventureWorld.calculateStars(score);
+    const coinsReward = mission ? mission.coinReward : 100;
+
+    if (mission) {
+      Storage.completeAdventureLevel(mission.worldId, mission.levelNum, stars, score, coinsReward);
+    }
+    if (typeof SnakeEvolution !== 'undefined') {
+      SnakeEvolution.addExp(60);
+    }
+    if (typeof DailySystem !== 'undefined') {
+      DailySystem.recordEvent('rescue', 1);
+    }
+
+    UI.showLevelVictory({
+      worldName: mission ? mission.worldName : 'Adventure World',
+      levelNum: mission ? mission.levelNum : 1,
+      title: mission ? mission.title : 'Mission Accomplished',
+      stars,
+      score,
+      coinsReward
+    });
   };
 
   // Handle Level Cleared in Obstacle Mode
@@ -399,6 +500,14 @@ const Game = (() => {
 
     // Spawn explosion particles
     spawnCrashParticles(snake.segments);
+
+    // End ghost rival recording
+    if (typeof GhostRival !== 'undefined') {
+      GhostRival.endRun(currentMode.id, score);
+    }
+    if (typeof DailySystem !== 'undefined') {
+      DailySystem.recordEvent('score', score);
+    }
 
     // Save to Multi-Mode Analytics & Leaderboard
     const isNewRecord = Storage.saveModeBestScore(currentMode.id, score);
@@ -480,6 +589,41 @@ const Game = (() => {
         UI.updateBonusBar(0, 1);
       }
 
+      // Update Power-Ups
+      if (typeof PowerUpManager !== 'undefined') {
+        const head = snake.segments[0];
+        const obstacleCells = (currentMode && currentMode.hasObstacles) ? ObstaclesManager.getObstacleCells() : [];
+        PowerUpManager.update(deltaTime, head, foodManager, snake.segments, obstacleCells, GRID_SIZE, GRID_SIZE);
+        if (UI.updatePowerUpBar) {
+          UI.updatePowerUpBar(PowerUpManager.getActiveEffects());
+        }
+      }
+
+      // Update Ghost Rival
+      if (typeof GhostRival !== 'undefined') {
+        GhostRival.update(totalElapsedPlayTime, score);
+        if (UI.updateGhostDelta) {
+          UI.updateGhostDelta(GhostRival.getScoreDelta());
+        }
+      }
+
+      // Update Weather Atmosphere
+      if (typeof WeatherEngine !== 'undefined') {
+        WeatherEngine.update(deltaTime, canvas.width / (window.devicePixelRatio || 1), canvas.height / (window.devicePixelRatio || 1));
+      }
+
+      // Update Adventure World Survival timer & mission tracking
+      if (currentMode && currentMode.isAdventure && typeof AdventureWorld !== 'undefined') {
+        AdventureWorld.updateSurvivalTime(totalElapsedPlayTime / 1000);
+        if (UI.updateAdventureMissionHUD) {
+          UI.updateAdventureMissionHUD(AdventureWorld.getMissionProgressText(), AdventureWorld.getMissionProgressPercent());
+        }
+        if (AdventureWorld.checkMissionStatus(score)) {
+          handleAdventureLevelClear();
+          return;
+        }
+      }
+
       // Periodic check for survival achievements
       checkAchievements();
     }
@@ -487,9 +631,32 @@ const Game = (() => {
     // Render Scene
     drawBackground();
 
+    const renderW = canvas.width / (window.devicePixelRatio || 1);
+    const renderH = canvas.height / (window.devicePixelRatio || 1);
+
+    // Dynamic Weather Atmosphere Particles
+    if (typeof WeatherEngine !== 'undefined') {
+      WeatherEngine.draw(ctx, renderW, renderH);
+    }
+
+    // Adventure Safe Zone Nest & Baby Snakes
+    if (typeof AdventureWorld !== 'undefined' && currentMode && currentMode.isAdventure) {
+      AdventureWorld.draw(ctx, cellSize);
+    }
+
+    // Ghost Rival Phantom Snake
+    if (typeof GhostRival !== 'undefined') {
+      GhostRival.draw(ctx, cellSize);
+    }
+
     // Draw Obstacles (if Obstacle mode)
     if (currentMode && currentMode.hasObstacles) {
       ObstaclesManager.draw(ctx, cellSize, Themes.getPalette());
+    }
+
+    // Draw Collectible Power-Up Item on Grid
+    if (typeof PowerUpManager !== 'undefined') {
+      PowerUpManager.draw(ctx, cellSize);
     }
 
     // Draw Entities
@@ -690,7 +857,10 @@ const Game = (() => {
       setupCanvas();
     },
 
-    startNewGame() {
+    startNewGame(options = {}) {
+      if (options.mode) {
+        GameModes.setMode(options.mode);
+      }
       currentMode = GameModes.getCurrentMode();
       difficulty = UI.getSelectedDifficulty();
       score = 0;
@@ -710,7 +880,12 @@ const Game = (() => {
         timeRemaining = 0;
       }
 
-      if (currentMode.hasObstacles) {
+      if (currentMode.isAdventure && typeof AdventureWorld !== 'undefined') {
+        const worldId = options.worldId || AdventureWorld.getCurrentWorldId() || 'forest';
+        const levelNum = options.levelNum || AdventureWorld.getCurrentLevelNum() || 1;
+        AdventureWorld.setLevel(worldId, levelNum);
+        level = levelNum;
+      } else if (currentMode.hasObstacles) {
         ObstaclesManager.setLevel(1);
       }
 
@@ -718,8 +893,25 @@ const Game = (() => {
       snake.setWrapWalls(currentMode.wrapWalls);
 
       foodManager.reset();
-      const obstacleCells = currentMode.hasObstacles ? ObstaclesManager.getObstacleCells() : [];
+      const obstacleCells = (currentMode.hasObstacles && !currentMode.isAdventure) 
+        ? ObstaclesManager.getObstacleCells() 
+        : [];
       foodManager.spawnFood(snake.segments, obstacleCells, currentMode.bonusFrequency);
+
+      if (currentMode.isAdventure && typeof AdventureWorld !== 'undefined') {
+        AdventureWorld.setupRescueMission(GRID_SIZE, GRID_SIZE, snake.segments, obstacleCells);
+      }
+
+      // Initialize Power-Ups, Ghost Rival, Weather & Daily tracking
+      if (typeof PowerUpManager !== 'undefined') PowerUpManager.reset();
+      if (typeof GhostRival !== 'undefined') GhostRival.startRun(currentMode.id);
+      if (typeof WeatherEngine !== 'undefined') {
+        const env = (currentMode.isAdventure && typeof AdventureWorld !== 'undefined')
+          ? AdventureWorld.getCurrentWorld().weather
+          : 'classic';
+        WeatherEngine.init(env);
+      }
+      if (typeof DailySystem !== 'undefined') DailySystem.recordEvent('game', 1);
 
       UI.setupHUDForMode(currentMode);
       UI.updateHUD(score, level, getSpeedMultiplier());

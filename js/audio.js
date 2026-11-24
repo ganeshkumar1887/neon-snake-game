@@ -385,7 +385,154 @@ const SoundEngine = (() => {
       if (isUrgent) this.vibrate(18);
     },
 
-    // 10. Synthwave Ambient BGM Generator
+    // 10. Adventure Power-Up Collect (Cheerful ascending chime)
+    playPowerUp() {
+      if (!isSoundEnabled || !isSfxEnabled) return;
+      initContext();
+      if (!ctx) return;
+
+      const now = ctx.currentTime;
+      const notes = [523.25, 659.25, 783.99, 1046.5]; // C5, E5, G5, C6
+      notes.forEach((freq, idx) => {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        const start = now + idx * 0.045;
+
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(freq, start);
+
+        gain.gain.setValueAtTime(0.32, start);
+        gain.gain.exponentialRampToValueAtTime(0.001, start + 0.18);
+
+        osc.connect(gain);
+        gain.connect(sfxGain);
+
+        osc.start(start);
+        osc.stop(start + 0.18);
+      });
+      this.vibrate([20, 25, 35]);
+    },
+
+    // 11. Shield Absorb / Bubble Pop
+    playShieldPop() {
+      if (!isSoundEnabled || !isSfxEnabled) return;
+      initContext();
+      if (!ctx) return;
+
+      const now = ctx.currentTime;
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(450, now);
+      osc.frequency.exponentialRampToValueAtTime(140, now + 0.22);
+
+      gain.gain.setValueAtTime(0.4, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.22);
+
+      osc.connect(gain);
+      gain.connect(sfxGain);
+
+      osc.start(now);
+      osc.stop(now + 0.22);
+      this.vibrate(50);
+    },
+
+    // 12. Baby Snake Rescue Celebration
+    playRescue() {
+      if (!isSoundEnabled || !isSfxEnabled) return;
+      initContext();
+      if (!ctx) return;
+
+      const now = ctx.currentTime;
+      const notes = [698.46, 880.00, 1046.50, 1396.91]; // F5, A5, C6, F6
+      notes.forEach((freq, idx) => {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        const start = now + idx * 0.06;
+
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(freq, start);
+
+        gain.gain.setValueAtTime(0.35, start);
+        gain.gain.exponentialRampToValueAtTime(0.001, start + 0.22);
+
+        osc.connect(gain);
+        gain.connect(sfxGain);
+
+        osc.start(start);
+        osc.stop(start + 0.22);
+      });
+      this.vibrate([30, 20, 40]);
+    },
+
+    // 13. Sweet Coin Clink
+    playCoin() {
+      if (!isSoundEnabled || !isSfxEnabled) return;
+      initContext();
+      if (!ctx) return;
+
+      const now = ctx.currentTime;
+      const osc1 = ctx.createOscillator();
+      const osc2 = ctx.createOscillator();
+      const gain = ctx.createGain();
+
+      osc1.type = 'sine';
+      osc2.type = 'sine';
+      osc1.frequency.setValueAtTime(987.77, now); // B5
+      osc2.frequency.setValueAtTime(1318.51, now + 0.05); // E6
+
+      gain.gain.setValueAtTime(0.3, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.22);
+
+      osc1.connect(gain);
+      osc2.connect(gain);
+      gain.connect(sfxGain);
+
+      osc1.start(now);
+      osc1.stop(now + 0.08);
+      osc2.start(now + 0.05);
+      osc2.stop(now + 0.22);
+      this.vibrate(15);
+    },
+
+    // 14. Snake Evolution Majestic Fanfare
+    playEvolution() {
+      if (!isSoundEnabled || !isSfxEnabled) return;
+      initContext();
+      if (!ctx) return;
+
+      const now = ctx.currentTime;
+      const chords = [
+        [523.25, 659.25], // C5, E5
+        [659.25, 783.99], // E5, G5
+        [783.99, 1046.50], // G5, C6
+        [1046.50, 1318.51, 1567.98] // C6, E6, G6
+      ];
+
+      chords.forEach((chord, step) => {
+        const start = now + step * 0.12;
+        chord.forEach(freq => {
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+
+          osc.type = 'sawtooth';
+          osc.frequency.setValueAtTime(freq, start);
+
+          gain.gain.setValueAtTime(0.25, start);
+          gain.gain.exponentialRampToValueAtTime(0.001, start + 0.45);
+
+          osc.connect(gain);
+          gain.connect(sfxGain);
+
+          osc.start(start);
+          osc.stop(start + 0.45);
+        });
+      });
+      this.vibrate([40, 40, 60, 100]);
+    },
+
+    // 15. Synthwave Ambient BGM Generator
     startBGM() {
       if (!isSoundEnabled || !isBgmEnabled || isBgmPlaying) return;
       initContext();

@@ -718,12 +718,17 @@ const UI = (() => {
     init() {
       cacheElements();
       this.updatePlayerProfile();
+      this.updateCoinsDisplay();
+      this.updateEvolutionDisplay();
       this.applySavedSettings();
       this.updateHomeModeBanner();
       this.updateBestScoreDisplay();
       this.updateSoundToggles();
       initHeroCanvas();
       this.bindEvents();
+      if (typeof DailySystem !== 'undefined') {
+        DailySystem.getStreakInfo();
+      }
     },
 
     // Refresh player profile name across home header and greeting
@@ -1746,6 +1751,526 @@ const UI = (() => {
         toast.classList.add('fade-out');
         setTimeout(() => toast.remove(), 300);
       }, 4000);
+    },
+
+    // ==========================================
+    // Coins & Evolution Displays
+    // ==========================================
+    updateCoinsDisplay() {
+      if (typeof Storage === 'undefined') return;
+      const coins = Storage.getCoins();
+      const elsCoins = document.querySelectorAll('.coins-val-text');
+      elsCoins.forEach(el => {
+        el.textContent = coins.toLocaleString();
+      });
+    },
+
+    updateEvolutionDisplay() {
+      if (typeof SnakeEvolution === 'undefined') return;
+      const prog = SnakeEvolution.getProgress();
+      const elBadge = document.getElementById('player-evolution-badge');
+      if (elBadge) {
+        elBadge.textContent = prog.stage.name;
+        elBadge.style.backgroundColor = prog.stage.badgeColor + '22';
+        elBadge.style.color = prog.stage.badgeColor;
+      }
+    },
+
+    // ==========================================
+    // Adventure Worlds Modal
+    // ==========================================
+    openAdventureModal() {
+      if (typeof AdventureWorld === 'undefined') return;
+      const worlds = AdventureWorld.getWorlds();
+      const progress = (typeof Storage !== 'undefined') ? Storage.getAdventureProgress() : { completedLevels: {}, unlockedWorlds: ['forest'] };
+      const listEl = document.getElementById('adventure-worlds-list');
+      if (!listEl) return;
+
+      listEl.innerHTML = '';
+      worlds.forEach(w => {
+        const isUnlocked = AdventureWorld.isWorldUnlocked(w.id);
+        const card = document.createElement('div');
+        card.className = `adventure-world-card ${isUnlocked ? 'unlocked' : 'locked'}`;
+
+        // 5 levels pills
+        let levelsHtml = '<div class="adventure-levels-grid">';
+        for (let lvl = 1; lvl <= 5; lvl++) {
+          const key = `${w.id}_${lvl}`;
+          const lvlData = progress.completedLevels ? progress.completedLevels[key] : null;
+          const isLvlUnlocked = isUnlocked && (lvl === 1 || (progress.completedLevels && progress.completedLevels[`${w.id}_${lvl - 1}`]));
+          const stars = lvlData ? lvlData.stars : 0;
+          const starsHtml = '★'.repeat(stars) + '☆'.repeat(3 - stars);
+
+          levelsHtml += `
+            <button type="button" class="adventure-level-btn ${isLvlUnlocked ? 'active' : 'disabled'}"
+              ${!isLvlUnlocked ? 'disabled' : ''}
+              onclick="UI.startAdventureLevel('${w.id}', ${lvl})">
+              <span class="lvl-num">Level ${lvl}</span>
+              <span class="lvl-stars">${starsHtml}</span>
+            </button>
+          `;
+        }
+        levelsHtml += '</div>';
+
+        card.innerHTML = `
+          <div class="world-card-header" style="background:${w.bgColor}; border-left: 5px solid ${w.primaryColor}">
+            <div class="world-card-top-row">
+              <span class="world-badge-tag" style="background:${w.primaryColor}; color:#fff">${w.badge}</span>
+              <h3 class="world-card-title">${w.name}</h3>
+            </div>
+            <p class="world-card-tagline">${w.tagline}</p>
+          </div>
+          <div class="world-card-body">
+            ${isUnlocked ? levelsHtml : `<div class="world-locked-hint"><span>🔒 Unlock by earning stars in previous worlds!</span></div>`}
+          </div>
+        `;
+        listEl.appendChild(card);
+      });
+
+      this.openModal('modal-adventure');
+    },
+
+    startAdventureLevel(worldId, levelNum) {
+      this.closeModal('modal-adventure');
+      SoundEngine.playClick();
+      Game.startNewGame({ mode: 'adventure', worldId, levelNum });
+    },
+
+    // ==========================================
+    // Snake Fashion Studio Modal
+    // ==========================================
+    openFashionModal() {
+      if (typeof FashionStudio === 'undefined') return;
+      this.renderFashionStudio('skins');
+      this.openModal('modal-fashion');
+      this.startFashionPreview();
+    },
+
+    startFashionPreview() {
+      const canvas = document.getElementById('fashion-preview-canvas');
+      if (!canvas) return;
+      const ctx = canvas.getContext('2d');
+      const dpr = window.devicePixelRatio || 1;
+      canvas.width = 160 * dpr;
+      canvas.height = 140 * dpr;
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+      const renderPreview = () => {
+        const modal = document.getElementById('modal-fashion');
+        if (!modal || !modal.classList.contains('active')) return;
+
+        const time = performance.now();
+        ctx.clearRect(0, 0, 160, 140);
+
+        // Soft pastel preview pedestal
+        ctx.fillStyle = '#FAF5FF';
+        ctx.beginPath();
+        ctx.ellipse(80, 110, 60, 20, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.save();
+        ctx.translate(80, 75);
+        const floatY = Math.sin(time * 0.004) * 4;
+        ctx.translate(0, floatY);
+
+        const cellSize = 38;
+        const pal = FashionStudio.getActiveColors();
+        const activeHat = FashionStudio.getActiveHat();
+
+        // Draw preview cartoon head
+        ctx.save();
+        const headLen = cellSize * 0.76;
+        const headWidth = cellSize * 0.64;
+
+        // Head shadow
+        ctx.fillStyle = 'rgba(22, 101, 52, 0.15)';
+        ctx.beginPath();
+        ctx.ellipse(0, headWidth * 0.45, headLen * 0.7, headWidth * 0.4, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Head shape
+        ctx.beginPath();
+        ctx.moveTo(headLen * 0.62, 0);
+        ctx.bezierCurveTo(headLen * 0.5, -headWidth * 0.45, headLen * 0.1, -headWidth * 0.62, -headLen * 0.4, -headWidth * 0.48);
+        ctx.bezierCurveTo(-headLen * 0.55, -headWidth * 0.22, -headLen * 0.55, headWidth * 0.22, -headLen * 0.4, headWidth * 0.48);
+        ctx.bezierCurveTo(headLen * 0.1, headWidth * 0.62, headLen * 0.5, headWidth * 0.45, headLen * 0.62, 0);
+        ctx.closePath();
+
+        const headGrad = ctx.createRadialGradient(headLen * 0.1, -headWidth * 0.15, cellSize * 0.1, 0, 0, headLen * 0.85);
+        headGrad.addColorStop(0, pal.crest || '#85EA46');
+        headGrad.addColorStop(0.45, pal.body || '#4ECB23');
+        headGrad.addColorStop(1, pal.shade || '#26850E');
+        ctx.fillStyle = headGrad;
+        ctx.fill();
+
+        // Belly
+        ctx.fillStyle = pal.belly || '#FFF58A';
+        ctx.beginPath();
+        ctx.ellipse(0, headWidth * 0.32, headLen * 0.75, headWidth * 0.36, 0, 0, Math.PI);
+        ctx.fill();
+
+        // Rosy Cheeks
+        ctx.fillStyle = pal.blush || '#FF7E98';
+        [-1, 1].forEach(side => {
+          ctx.beginPath();
+          ctx.ellipse(headLen * 0.08, headWidth * 0.48 * side, cellSize * 0.16, cellSize * 0.11, 0, 0, Math.PI * 2);
+          ctx.fill();
+        });
+
+        // Eyes
+        const eyeX = headLen * 0.16;
+        const eyeY = headWidth * 0.36;
+        const eyeRadius = cellSize * 0.16;
+        [-1, 1].forEach(side => {
+          ctx.fillStyle = '#FFFFFF';
+          ctx.beginPath();
+          ctx.arc(eyeX, eyeY * side, eyeRadius, 0, Math.PI * 2);
+          ctx.fill();
+
+          ctx.fillStyle = pal.eyePupil || '#1E1B24';
+          ctx.beginPath();
+          ctx.arc(eyeX + 0.5, eyeY * side, eyeRadius * 0.78, 0, Math.PI * 2);
+          ctx.fill();
+
+          ctx.fillStyle = '#FFFFFF';
+          ctx.beginPath();
+          ctx.arc(eyeX - eyeRadius * 0.22, eyeY * side - eyeRadius * 0.25 * side, eyeRadius * 0.34, 0, Math.PI * 2);
+          ctx.fill();
+        });
+
+        // Smile
+        ctx.strokeStyle = pal.shade || '#26850E';
+        ctx.lineWidth = 1.4;
+        ctx.beginPath();
+        ctx.arc(headLen * 0.38, 0, headWidth * 0.16, -Math.PI / 3, Math.PI / 3);
+        ctx.stroke();
+
+        // Wearable Hat & Evolution
+        FashionStudio.drawHatOnHead(ctx, cellSize, activeHat, time);
+        SnakeEvolution.drawEvolutionFeatures(ctx, cellSize, time);
+
+        ctx.restore();
+        ctx.restore();
+
+        requestAnimationFrame(renderPreview);
+      };
+
+      requestAnimationFrame(renderPreview);
+    },
+
+    renderFashionStudio(tab = 'skins') {
+      const container = document.getElementById('fashion-items-grid');
+      if (!container) return;
+      container.innerHTML = '';
+
+      // Update tab buttons active state
+      document.querySelectorAll('.fashion-tab-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.getAttribute('data-tab') === tab);
+      });
+
+      if (tab === 'skins') {
+        const skins = FashionStudio.getSkins();
+        const equipped = Storage.getEquippedSkin();
+        skins.forEach(s => {
+          const isUnlocked = Storage.isFashionUnlocked(s.id);
+          const isEquipped = equipped === s.id;
+          const card = document.createElement('div');
+          card.className = `fashion-item-card ${isEquipped ? 'equipped' : ''}`;
+          card.innerHTML = `
+            <div class="fashion-preview-color" style="background:${s.colors.body}; border:3px solid ${s.colors.crest}"></div>
+            <div class="fashion-item-info">
+              <span class="fashion-item-title">${s.name}</span>
+              <span class="fashion-item-price">${isUnlocked ? 'Unlocked' : `🪙 ${s.cost}`}</span>
+            </div>
+            <button type="button" class="btn-fashion-action ${isEquipped ? 'btn-equipped' : isUnlocked ? 'btn-equip' : 'btn-buy'}"
+              onclick="UI.handleFashionClick('skin', '${s.id}', ${s.cost})">
+              ${isEquipped ? 'EQUIPPED' : isUnlocked ? 'EQUIP' : `BUY 🪙${s.cost}`}
+            </button>
+          `;
+          container.appendChild(card);
+        });
+      } else if (tab === 'hats') {
+        const hats = FashionStudio.getHats();
+        const equipped = Storage.getEquippedHat();
+        hats.forEach(h => {
+          const isUnlocked = Storage.isFashionUnlocked(h.id);
+          const isEquipped = equipped === h.id;
+          const card = document.createElement('div');
+          card.className = `fashion-item-card ${isEquipped ? 'equipped' : ''}`;
+          card.innerHTML = `
+            <div class="fashion-preview-badge">${h.badge}</div>
+            <div class="fashion-item-info">
+              <span class="fashion-item-title">${h.name}</span>
+              <span class="fashion-item-price">${isUnlocked ? 'Unlocked' : `🪙 ${h.cost}`}</span>
+            </div>
+            <button type="button" class="btn-fashion-action ${isEquipped ? 'btn-equipped' : isUnlocked ? 'btn-equip' : 'btn-buy'}"
+              onclick="UI.handleFashionClick('hat', '${h.id}', ${h.cost})">
+              ${isEquipped ? 'EQUIPPED' : isUnlocked ? 'EQUIP' : `BUY 🪙${h.cost}`}
+            </button>
+          `;
+          container.appendChild(card);
+        });
+      } else if (tab === 'patterns') {
+        const patterns = FashionStudio.getPatterns();
+        const equipped = Storage.getEquippedPattern();
+        patterns.forEach(p => {
+          const isUnlocked = Storage.isFashionUnlocked(p.id);
+          const isEquipped = equipped === p.id;
+          const card = document.createElement('div');
+          card.className = `fashion-item-card ${isEquipped ? 'equipped' : ''}`;
+          card.innerHTML = `
+            <div class="fashion-preview-badge">PATTERN</div>
+            <div class="fashion-item-info">
+              <span class="fashion-item-title">${p.name}</span>
+              <span class="fashion-item-price">${isUnlocked ? 'Unlocked' : `🪙 ${p.cost}`}</span>
+            </div>
+            <button type="button" class="btn-fashion-action ${isEquipped ? 'btn-equipped' : isUnlocked ? 'btn-equip' : 'btn-buy'}"
+              onclick="UI.handleFashionClick('pattern', '${p.id}', ${p.cost})">
+              ${isEquipped ? 'EQUIPPED' : isUnlocked ? 'EQUIP' : `BUY 🪙${p.cost}`}
+            </button>
+          `;
+          container.appendChild(card);
+        });
+      }
+    },
+
+    handleFashionClick(type, id, cost) {
+      if (Storage.isFashionUnlocked(id)) {
+        if (type === 'skin') Storage.setEquippedSkin(id);
+        else if (type === 'hat') Storage.setEquippedHat(id);
+        else if (type === 'pattern') Storage.setEquippedPattern(id);
+        SoundEngine.playClick();
+      } else {
+        const success = FashionStudio.unlockItem(id, cost);
+        if (success) {
+          if (type === 'skin') Storage.setEquippedSkin(id);
+          else if (type === 'hat') Storage.setEquippedHat(id);
+          else if (type === 'pattern') Storage.setEquippedPattern(id);
+          this.updateCoinsDisplay();
+          this.showToast({
+            title: 'Fashion Unlocked!',
+            desc: 'New style ready to wear on the adventure!',
+            icon: '🎨'
+          });
+        } else {
+          this.showToast({
+            title: 'Need More Coins!',
+            desc: `You need 🪙 ${cost} coins. Play adventure levels to earn more!`,
+            icon: '🪙'
+          });
+          return;
+        }
+      }
+      const activeTab = document.querySelector('.fashion-tab-btn.active');
+      const tabName = activeTab ? activeTab.getAttribute('data-tab') : 'skins';
+      this.renderFashionStudio(tabName);
+    },
+
+    // ==========================================
+    // Daily Rewards & Missions Modal
+    // ==========================================
+    openDailyModal() {
+      if (typeof DailySystem === 'undefined') return;
+      const rewards = DailySystem.getStreakRewards();
+      const info = DailySystem.getStreakInfo();
+      const streakGrid = document.getElementById('daily-streak-grid');
+      if (streakGrid) {
+        streakGrid.innerHTML = '';
+        rewards.forEach(r => {
+          const isToday = r.day === info.streak;
+          const isPassed = r.day < info.streak;
+          const card = document.createElement('div');
+          card.className = `streak-day-card ${isToday ? 'today' : isPassed ? 'done' : 'future'}`;
+          card.innerHTML = `
+            <span class="streak-day-label">Day ${r.day}</span>
+            <span class="streak-day-coin">🪙 ${r.coins}</span>
+            ${isPassed ? '<span class="streak-check">✓</span>' : isToday && info.isClaimedToday ? '<span class="streak-claimed">CLAIMED</span>' : isToday ? '<span class="streak-ready">READY</span>' : ''}
+          `;
+          streakGrid.appendChild(card);
+        });
+
+        const btnClaim = document.getElementById('btn-claim-daily-streak');
+        if (btnClaim) {
+          if (info.isClaimedToday) {
+            btnClaim.disabled = true;
+            btnClaim.textContent = 'CLAIMED TODAY ✓';
+          } else {
+            btnClaim.disabled = false;
+            btnClaim.textContent = `CLAIM DAY ${info.streak} (🪙 ${rewards[info.streak - 1].coins})`;
+          }
+        }
+      }
+
+      // Render Daily Missions
+      const missions = DailySystem.getMissions();
+      const missionsList = document.getElementById('daily-missions-list');
+      if (missionsList) {
+        missionsList.innerHTML = '';
+        missions.forEach(m => {
+          const isDone = m.current >= m.target;
+          const item = document.createElement('div');
+          item.className = `daily-mission-item ${m.claimed ? 'claimed' : isDone ? 'ready' : ''}`;
+          item.innerHTML = `
+            <div class="mission-text-col">
+              <span class="mission-title">${m.title}</span>
+              <span class="mission-desc">${m.desc} (${m.current}/${m.target})</span>
+              <div class="mission-progress-bar">
+                <div class="mission-progress-fill" style="width:${Math.min(100, (m.current / m.target) * 100)}%"></div>
+              </div>
+            </div>
+            <button type="button" class="btn-claim-mission ${m.claimed ? 'claimed' : isDone ? 'ready' : 'disabled'}"
+              ${m.claimed || !isDone ? 'disabled' : ''}
+              onclick="UI.claimDailyMission('${m.id}')">
+              ${m.claimed ? 'CLAIMED' : `CLAIM 🪙${m.reward}`}
+            </button>
+          `;
+          missionsList.appendChild(item);
+        });
+      }
+
+      this.openModal('modal-daily');
+    },
+
+    claimTodayStreak() {
+      const rewarded = DailySystem.claimTodayStreak();
+      if (rewarded > 0) {
+        this.updateCoinsDisplay();
+        this.openDailyModal();
+        this.showToast({
+          title: 'Daily Streak Claimed!',
+          desc: `+${rewarded} Coins added to your bank!`,
+          icon: '🪙'
+        });
+      }
+    },
+
+    claimDailyMission(id) {
+      const rewarded = DailySystem.claimMission(id);
+      if (rewarded > 0) {
+        this.updateCoinsDisplay();
+        this.openDailyModal();
+        this.showToast({
+          title: 'Mission Reward Claimed!',
+          desc: `+${rewarded} Coins earned!`,
+          icon: '🎉'
+        });
+      }
+    },
+
+    // ==========================================
+    // Adventure Level Victory & Evolution Modals
+    // ==========================================
+    showLevelVictory(data) {
+      const modal = document.getElementById('modal-level-victory');
+      if (!modal) return;
+
+      const titleEl = document.getElementById('victory-world-title');
+      const missionEl = document.getElementById('victory-mission-name');
+      const scoreEl = document.getElementById('victory-score-val');
+      const coinsEl = document.getElementById('victory-coins-val');
+
+      if (titleEl) titleEl.textContent = `${data.worldName} - Level ${data.levelNum}`;
+      if (missionEl) missionEl.textContent = data.title;
+      if (scoreEl) scoreEl.textContent = data.score;
+      if (coinsEl) coinsEl.textContent = `+${data.coinsReward} Coins`;
+
+      const starsContainer = document.getElementById('victory-stars-row');
+      if (starsContainer) {
+        starsContainer.innerHTML = '';
+        for (let i = 1; i <= 3; i++) {
+          const star = document.createElement('span');
+          star.className = `victory-star ${i <= data.stars ? 'earned' : 'empty'}`;
+          star.textContent = '★';
+          starsContainer.appendChild(star);
+        }
+      }
+
+      this.updateCoinsDisplay();
+      this.openModal('modal-level-victory');
+    },
+
+    showEvolutionCelebration(stage) {
+      const modal = document.getElementById('modal-evolution');
+      if (!modal) return;
+      const tEl = document.getElementById('evolution-stage-title');
+      const dEl = document.getElementById('evolution-stage-desc');
+      const pEl = document.getElementById('evolution-stage-perk');
+      if (tEl) tEl.textContent = stage.name;
+      if (dEl) dEl.textContent = stage.desc;
+      if (pEl) pEl.textContent = stage.perk;
+      this.updateEvolutionDisplay();
+      this.openModal('modal-evolution');
+    },
+
+    // ==========================================
+    // In-Game Gameplay HUD Elements
+    // ==========================================
+    updatePowerUpBar(activeEffects) {
+      const container = document.getElementById('hud-powerups-container');
+      if (!container) return;
+      if (!activeEffects) {
+        container.innerHTML = '';
+        container.classList.add('hide');
+        return;
+      }
+      const keys = Object.keys(activeEffects);
+      if (keys.length === 0) {
+        container.innerHTML = '';
+        container.classList.add('hide');
+        return;
+      }
+      container.classList.remove('hide');
+      let html = '';
+      keys.forEach(k => {
+        const item = activeEffects[k];
+        const pct = Math.round((item.remaining / item.duration) * 100);
+        html += `
+          <div class="hud-powerup-badge powerup-${k}">
+            <span class="powerup-name">${k.toUpperCase()}</span>
+            <div class="powerup-timer-ring" style="width:${pct}%"></div>
+          </div>
+        `;
+      });
+      container.innerHTML = html;
+    },
+
+    updateGhostDelta(delta) {
+      const el = document.getElementById('hud-ghost-delta');
+      if (!el) return;
+      if (delta === null || typeof delta === 'undefined') {
+        el.classList.add('hide');
+        return;
+      }
+      el.classList.remove('hide');
+      if (delta >= 0) {
+        el.className = 'hud-ghost-pill ghost-ahead';
+        el.textContent = `+${delta} Ahead 👻`;
+      } else {
+        el.className = 'hud-ghost-pill ghost-behind';
+        el.textContent = `${delta} Behind 👻`;
+      }
+    },
+
+    updateAdventureMissionHUD(text, percent) {
+      const elBanner = document.getElementById('hud-adventure-mission');
+      const elText = document.getElementById('hud-mission-text');
+      const elBar = document.getElementById('hud-mission-bar');
+      if (!elBanner) return;
+      if (!text) {
+        elBanner.classList.add('hide');
+        return;
+      }
+      elBanner.classList.remove('hide');
+      if (elText) elText.textContent = text;
+      if (elBar) elBar.style.width = `${percent}%`;
+    },
+
+    showPowerUpToast(def) {
+      this.showToast({
+        title: `Power-Up: ${def.name}!`,
+        desc: def.desc,
+        icon: '<svg viewBox="0 0 24 24"><path fill="#F59E0B" d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>'
+      });
     }
   };
 

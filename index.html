@@ -65,6 +65,23 @@
 
             <!-- Player Profile & Settings -->
             <div class="header-actions">
+              <!-- Coins Counter Pill -->
+              <div class="header-coins-pill" id="btn-header-coins" title="Daily Rewards & Missions" onclick="UI.openDailyModal()" role="button" tabindex="0">
+                <span class="coin-icon-svg" aria-hidden="true">
+                  <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="#FFD700" stroke="#F59E0B" stroke-width="2"/><text x="12" y="16" font-size="12" font-family="'Fredoka', sans-serif" font-weight="700" text-anchor="middle" fill="#78350F">C</text></svg>
+                </span>
+                <span id="header-coins-val" class="coins-val-text">0</span>
+              </div>
+
+              <!-- Evolution Stage Badge -->
+              <div class="header-evolution-pill" id="header-evolution-badge" title="Snake Evolution Stage" onclick="UI.showEvolutionCelebration(SnakeEvolution.getEvolutionData())" role="button" tabindex="0">
+                <span class="evolution-icon-svg" aria-hidden="true">
+                  <svg viewBox="0 0 24 24"><path fill="#F59E0B" d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l7.09-1.01L12 2z"/></svg>
+                </span>
+                <span id="player-evolution-badge" class="evolution-text">Baby Snake</span>
+              </div>
+
+              <!-- Player Nickname -->
               <div class="player-profile-pill" id="btn-open-name-modal" title="Edit player name">
                 <span class="profile-avatar">
                   <svg viewBox="0 0 24 24" class="profile-avatar-svg"><path fill="#FFE987" stroke="#E6C200" stroke-width="1.2" d="M12 2l2.9 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l7.1-1.01L12 2z"/></svg>
@@ -72,6 +89,13 @@
                 <span id="player-profile-name" class="player-name-text">Player 1</span>
                 <span class="profile-edit-icon" aria-hidden="true"><svg viewBox="0 0 24 24" class="svg-edit-pencil"><path fill="currentColor" d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04a.996.996 0 0 0 0-1.41l-2.34-2.34a.996.996 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg></span>
               </div>
+
+              <!-- Quick Fashion Button -->
+              <button type="button" id="btn-header-fashion" class="btn-circle-action" title="Fashion Studio (Skins, Hats)" aria-label="Fashion Studio" onclick="UI.openFashionModal()">
+                <svg viewBox="0 0 24 24"><path fill="currentColor" d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10c.83 0 1.5-.67 1.5-1.5 0-.39-.15-.74-.39-1.01-.23-.26-.38-.61-.38-.99 0-.83.67-1.5 1.5-1.5H16c3.31 0 6-2.69 6-6 0-4.96-4.49-9-10-9zm-5.5 11c-.83 0-1.5-.67-1.5-1.5S5.67 10 6.5 10s1.5.67 1.5 1.5S7.33 13 6.5 13zm3-4C8.67 9 8 8.33 8 7.5S8.67 6 9.5 6s1.5.67 1.5 1.5S10.33 9 9.5 9zm5 0c-.83 0-1.5-.67-1.5-1.5S13.67 6 14.5 6s1.5.67 1.5 1.5S15.33 9 14.5 9zm3 4c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5z"/></svg>
+              </button>
+
+              <!-- Quick Settings Button -->
               <button type="button" id="btn-header-settings" class="btn-circle-action" title="Settings" aria-label="Settings" onclick="UI.openSettingsModal()">
                 <svg viewBox="0 0 24 24"><path fill="currentColor" d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/></svg>
               </button>
@@ -120,6 +144,23 @@
 
           <div class="home-cards-grid" id="home-cards-grid">
             
+            <!-- Card 0: ADVENTURE MODE (Coral Red / Adventure) -->
+            <div class="home-card-item card-coral" data-mode="adventure" role="button" tabindex="0" onclick="UI.openAdventureModal()">
+              <div class="card-top">
+                <span class="card-icon-wrap bg-coral-icon">
+                  <svg viewBox="0 0 24 24" class="svg-card-icon"><path fill="currentColor" d="M14 6l-3.75 5 2.85 3.8-1.6 1.2L7 10l-6 8h22L14 6z"/></svg>
+                </span>
+              </div>
+              <div class="card-body">
+                <h3 class="card-title">ADVENTURE</h3>
+                <p class="card-desc">4 Worlds & Quests</p>
+              </div>
+              <div class="card-bottom">
+                <span class="card-badge-pill highlight">20 Levels</span>
+                <span class="card-action-hint">▶</span>
+              </div>
+            </div>
+
             <!-- Card 1: INFINITY MODE (Lavender) -->
             <div class="home-card-item card-lavender" data-mode="infinity" role="button" tabindex="0">
               <div class="card-top">
@@ -188,7 +229,24 @@
               </div>
             </div>
 
-            <!-- Card 5: THEMES (Light Blue) -->
+            <!-- Card 5: FASHION STUDIO (Lavender/Purple) -->
+            <div class="home-card-item card-fashion" id="btn-home-card-fashion" role="button" tabindex="0" onclick="UI.openFashionModal()">
+              <div class="card-top">
+                <span class="card-icon-wrap bg-fashion-icon">
+                  <svg viewBox="0 0 24 24" class="svg-card-icon"><path fill="currentColor" d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10c.83 0 1.5-.67 1.5-1.5 0-.39-.15-.74-.39-1.01-.23-.26-.38-.61-.38-.99 0-.83.67-1.5 1.5-1.5H16c3.31 0 6-2.69 6-6 0-4.96-4.49-9-10-9zm-5.5 11c-.83 0-1.5-.67-1.5-1.5S5.67 10 6.5 10s1.5.67 1.5 1.5S7.33 13 6.5 13zm3-4C8.67 9 8 8.33 8 7.5S8.67 6 9.5 6s1.5.67 1.5 1.5S10.33 9 9.5 9zm5 0c-.83 0-1.5-.67-1.5-1.5S13.67 6 14.5 6s1.5.67 1.5 1.5S15.33 9 14.5 9zm3 4c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5z"/></svg>
+                </span>
+              </div>
+              <div class="card-body">
+                <h3 class="card-title">FASHION</h3>
+                <p class="card-desc">Skins & Hats</p>
+              </div>
+              <div class="card-bottom">
+                <span class="card-badge-pill">Studio</span>
+                <span class="card-action-hint">▶</span>
+              </div>
+            </div>
+
+            <!-- Card 6: THEMES (Light Blue) -->
             <div class="home-card-item card-lightblue" id="btn-home-card-themes" role="button" tabindex="0" onclick="UI.openThemesModal()">
               <div class="card-top">
                 <span class="card-icon-wrap bg-lightblue-icon">
@@ -205,7 +263,7 @@
               </div>
             </div>
 
-            <!-- Card 6: SETTINGS (Mint Green) -->
+            <!-- Card 7: SETTINGS (Mint Green) -->
             <div class="home-card-item card-mint" id="btn-home-card-settings" role="button" tabindex="0" onclick="UI.openSettingsModal()">
               <div class="card-top">
                 <span class="card-icon-wrap bg-mint-icon">
@@ -272,6 +330,18 @@
 
         <!-- Quick Navigation Footer Pills -->
         <nav class="home-nav" aria-label="Game Navigation">
+          <button type="button" id="btn-open-adventure" class="nav-pill-btn nav-pill-highlight" title="Adventure Worlds" onclick="UI.openAdventureModal()">
+            <svg class="pill-svg" viewBox="0 0 24 24"><path fill="currentColor" d="M14 6l-3.75 5 2.85 3.8-1.6 1.2L7 10l-6 8h22L14 6z"/></svg>
+            <span>QUESTS</span>
+          </button>
+          <button type="button" id="btn-open-fashion" class="nav-pill-btn" title="Fashion Studio" onclick="UI.openFashionModal()">
+            <svg class="pill-svg" viewBox="0 0 24 24"><path fill="currentColor" d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10c.83 0 1.5-.67 1.5-1.5 0-.39-.15-.74-.39-1.01-.23-.26-.38-.61-.38-.99 0-.83.67-1.5 1.5-1.5H16c3.31 0 6-2.69 6-6 0-4.96-4.49-9-10-9zm-5.5 11c-.83 0-1.5-.67-1.5-1.5S5.67 10 6.5 10s1.5.67 1.5 1.5S7.33 13 6.5 13zm3-4C8.67 9 8 8.33 8 7.5S8.67 6 9.5 6s1.5.67 1.5 1.5S10.33 9 9.5 9zm5 0c-.83 0-1.5-.67-1.5-1.5S13.67 6 14.5 6s1.5.67 1.5 1.5S15.33 9 14.5 9zm3 4c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5z"/></svg>
+            <span>FASHION</span>
+          </button>
+          <button type="button" id="btn-open-daily" class="nav-pill-btn" title="Daily Rewards & Missions" onclick="UI.openDailyModal()">
+            <svg class="pill-svg" viewBox="0 0 24 24"><path fill="currentColor" d="M19 3h-1V1h-2v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11zM7 10h5v5H7z"/></svg>
+            <span>DAILY</span>
+          </button>
           <button type="button" id="btn-open-modes" class="nav-pill-btn" title="Game Modes" onclick="UI.openModesModal()">
             <svg class="pill-svg" viewBox="0 0 24 24"><path fill="currentColor" d="M21 6H3c-1.1 0-2 .9-2 2v8c0 1.1.9 2 2 2h18c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zm-10 7H8v3H6v-3H3v-2h3V8h2v3h3v2zm4.5 2c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zm4-3c-.83 0-1.5-.67-1.5-1.5S18.67 9 19.5 9s1.5.67 1.5 1.5-.67 1.5-1.5 1.5z"/></svg>
             <span>MODES</span>
@@ -373,6 +443,23 @@
           </button>
         </div>
       </header>
+
+      <!-- Adventure Mode Live Mission Progress Banner -->
+      <div id="hud-adventure-mission" class="hud-adventure-mission hide" aria-live="polite">
+        <div class="mission-info-row">
+          <span class="mission-quest-icon">⭐</span>
+          <span id="hud-mission-text" class="mission-text">Collect 15 Strawberries</span>
+        </div>
+        <div class="mission-bar-wrap">
+          <div id="hud-mission-bar" class="mission-bar-fill" style="width: 0%"></div>
+        </div>
+      </div>
+
+      <!-- Power-Up Active Timers Bar -->
+      <div id="hud-powerups-container" class="hud-powerups-container hide" aria-label="Active Power-Ups"></div>
+
+      <!-- Ghost Rival Live Score Delta -->
+      <div id="hud-ghost-delta" class="hud-ghost-pill hide"></div>
 
       <!-- Main Game Board Container -->
       <main class="game-board-container" id="game-board-container">
@@ -894,17 +981,172 @@
       </div>
     </div>
 
+    <!-- ==================== MODAL: ADVENTURE WORLDS ==================== -->
+    <div id="modal-adventure" class="modal-backdrop hide" role="dialog" aria-modal="true" aria-labelledby="modal-adventure-title">
+      <div class="modal-card modal-card-lg glass-panel">
+        <div class="modal-header">
+          <div class="modal-title-group">
+            <h2 id="modal-adventure-title" class="modal-title">ADVENTURE WORLDS</h2>
+            <span class="modal-header-badge">4 WORLDS • 20 LEVELS</span>
+          </div>
+          <button type="button" class="btn-modal-close" data-close="modal-adventure" onclick="UI.closeModal('modal-adventure')" aria-label="Close modal">&times;</button>
+        </div>
+        <div class="modal-body">
+          <p class="modal-subtitle">Rescue baby snakes, navigate tricky terrain, and collect golden stars across candy lands and icy peaks!</p>
+          <div class="adventure-worlds-list" id="adventure-worlds-list">
+            <!-- Populated dynamically by UI.openAdventureModal -->
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-close="modal-adventure" onclick="UI.closeModal('modal-adventure')">BACK TO MENU</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ==================== MODAL: SNAKE FASHION STUDIO ==================== -->
+    <div id="modal-fashion" class="modal-backdrop hide" role="dialog" aria-modal="true" aria-labelledby="modal-fashion-title">
+      <div class="modal-card modal-card-lg glass-panel">
+        <div class="modal-header">
+          <div class="modal-title-group">
+            <h2 id="modal-fashion-title" class="modal-title">FASHION STUDIO</h2>
+            <span class="modal-header-badge">CUSTOMIZE MASCOT</span>
+          </div>
+          <button type="button" class="btn-modal-close" data-close="modal-fashion" onclick="UI.closeModal('modal-fashion')" aria-label="Close modal">&times;</button>
+        </div>
+        <div class="modal-body fashion-studio-body">
+          <!-- Live 3D-Look Cartoon Snake Preview Stage -->
+          <div class="fashion-preview-wrap">
+            <canvas id="fashion-preview-canvas" width="160" height="140" class="fashion-preview-canvas" aria-label="Mascot Preview"></canvas>
+            <div class="fashion-coins-tag">
+              <span>🪙 <strong class="coins-val-text">0</strong> Coins</span>
+            </div>
+          </div>
+
+          <!-- Tabs: Skins, Hats, Patterns -->
+          <div class="fashion-tabs-row" role="tablist">
+            <button type="button" class="fashion-tab-btn active" data-tab="skins" onclick="UI.renderFashionStudio('skins')">SKINS</button>
+            <button type="button" class="fashion-tab-btn" data-tab="hats" onclick="UI.renderFashionStudio('hats')">HATS</button>
+            <button type="button" class="fashion-tab-btn" data-tab="patterns" onclick="UI.renderFashionStudio('patterns')">PATTERNS</button>
+          </div>
+
+          <!-- Items Grid -->
+          <div class="fashion-items-grid" id="fashion-items-grid">
+            <!-- Populated dynamically by UI.renderFashionStudio -->
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-primary" data-close="modal-fashion" onclick="UI.closeModal('modal-fashion')">APPLY & CLOSE</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ==================== MODAL: DAILY REWARDS & MISSIONS ==================== -->
+    <div id="modal-daily" class="modal-backdrop hide" role="dialog" aria-modal="true" aria-labelledby="modal-daily-title">
+      <div class="modal-card modal-card-lg glass-panel">
+        <div class="modal-header">
+          <div class="modal-title-group">
+            <h2 id="modal-daily-title" class="modal-title">DAILY REWARDS & MISSIONS</h2>
+            <span class="modal-header-badge">EARN FREE COINS</span>
+          </div>
+          <button type="button" class="btn-modal-close" data-close="modal-daily" onclick="UI.closeModal('modal-daily')" aria-label="Close modal">&times;</button>
+        </div>
+        <div class="modal-body">
+          <!-- 7-Day Login Streak Row -->
+          <div class="daily-streak-section">
+            <h3 class="section-title">7-DAY LOGIN STREAK</h3>
+            <div class="daily-streak-grid" id="daily-streak-grid">
+              <!-- Populated dynamically by UI.openDailyModal -->
+            </div>
+            <button type="button" id="btn-claim-daily-streak" class="btn btn-primary btn-claim-streak" onclick="UI.claimTodayStreak()">
+              CLAIM TODAY'S REWARD
+            </button>
+          </div>
+
+          <!-- Daily Quests List -->
+          <div class="daily-missions-section">
+            <h3 class="section-title">TODAY'S MISSIONS</h3>
+            <div class="daily-missions-list" id="daily-missions-list">
+              <!-- Populated dynamically by UI.openDailyModal -->
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-close="modal-daily" onclick="UI.closeModal('modal-daily')">CLOSE</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ==================== MODAL: LEVEL COMPLETE VICTORY ==================== -->
+    <div id="modal-level-victory" class="modal-backdrop hide" role="dialog" aria-modal="true" aria-labelledby="victory-world-title">
+      <div class="modal-card glass-panel victory-card">
+        <div class="victory-header">
+          <div class="victory-ribbon">LEVEL CLEARED!</div>
+          <h2 id="victory-world-title" class="victory-world-title">Forest Kingdom - Level 1</h2>
+          <p id="victory-mission-name" class="victory-mission-name">Strawberry Feast</p>
+        </div>
+        <div class="victory-body">
+          <div class="victory-stars-row" id="victory-stars-row">
+            <span class="victory-star earned">★</span>
+            <span class="victory-star earned">★</span>
+            <span class="victory-star earned">★</span>
+          </div>
+          <div class="victory-rewards-box">
+            <div class="victory-stat-item">
+              <span class="v-label">SCORE</span>
+              <span id="victory-score-val" class="v-value">0</span>
+            </div>
+            <div class="victory-stat-item">
+              <span class="v-label">COINS EARNED</span>
+              <span id="victory-coins-val" class="v-value coin-text">+100 Coins</span>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer victory-actions">
+          <button type="button" class="btn btn-secondary" onclick="UI.closeModal('modal-level-victory'); UI.openAdventureModal();">ALL LEVELS</button>
+          <button type="button" id="btn-victory-next" class="btn btn-primary" onclick="UI.closeModal('modal-level-victory'); AdventureWorld.startNextLevel();">NEXT LEVEL ▶</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ==================== MODAL: EVOLUTION CELEBRATION ==================== -->
+    <div id="modal-evolution" class="modal-backdrop hide" role="dialog" aria-modal="true" aria-labelledby="evolution-stage-title">
+      <div class="modal-card glass-panel evolution-card">
+        <div class="evolution-header">
+          <div class="evolution-sparkles">✨ 🎉 ✨</div>
+          <div class="evolution-ribbon">MASCOT EVOLVED!</div>
+          <h2 id="evolution-stage-title" class="evolution-stage-title">Adventure Snake</h2>
+          <p id="evolution-stage-desc" class="evolution-stage-desc">Your snake has grown bigger, bolder, and more confident!</p>
+        </div>
+        <div class="evolution-body">
+          <div class="evolution-perk-box">
+            <span class="evolution-perk-label">STAGE BONUS PERK:</span>
+            <p id="evolution-stage-perk" class="evolution-perk-text">+10% coin bonus from fruits and rescue missions!</p>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-primary" data-close="modal-evolution" onclick="UI.closeModal('modal-evolution')">AWESOME!</button>
+        </div>
+      </div>
+    </div>
+
   </div> <!-- /app-container -->
 
   <!-- JavaScript Modules in proper dependency order -->
-  <script src="js/storage.js?v=9.0"></script>
-  <script src="js/themes.js?v=9.0"></script>
-  <script src="js/modes.js?v=9.0"></script>
-  <script src="js/obstacles.js?v=9.0"></script>
-  <script src="js/audio.js?v=9.0"></script>
-  <script src="js/food.js?v=9.0"></script>
-  <script src="js/snake.js?v=9.0"></script>
-  <script src="js/ui.js?v=9.0"></script>
-  <script src="js/game.js?v=9.0"></script>
+  <script src="js/storage.js?v=10.0"></script>
+  <script src="js/themes.js?v=10.0"></script>
+  <script src="js/modes.js?v=10.0"></script>
+  <script src="js/obstacles.js?v=10.0"></script>
+  <script src="js/audio.js?v=10.0"></script>
+  <script src="js/food.js?v=10.0"></script>
+  <script src="js/powerups.js?v=10.0"></script>
+  <script src="js/ghost.js?v=10.0"></script>
+  <script src="js/weather.js?v=10.0"></script>
+  <script src="js/fashion.js?v=10.0"></script>
+  <script src="js/evolution.js?v=10.0"></script>
+  <script src="js/daily.js?v=10.0"></script>
+  <script src="js/adventure.js?v=10.0"></script>
+  <script src="js/snake.js?v=10.0"></script>
+  <script src="js/ui.js?v=10.0"></script>
+  <script src="js/game.js?v=10.0"></script>
 </body>
 </html>

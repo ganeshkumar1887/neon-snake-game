@@ -613,3 +613,82 @@
     height: 42px;
   }
 }
+
+/* ==========================================================================
+   BREAKPOINT 6: Small Mobile & Modal Tweaks for Adventure, Fashion & Daily
+   ========================================================================== */
+@media (max-width: 480px) {
+  .header-actions {
+    gap: 0.35rem;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+  }
+
+  .header-coins-pill, .header-evolution-pill {
+    padding: 0.22rem 0.45rem;
+  }
+
+  .coins-val-text {
+    font-size: 0.74rem;
+  }
+
+  .evolution-text {
+    font-size: 0.7rem;
+    max-width: 60px;
+  }
+
+  .player-profile-pill {
+    padding: 0.22rem 0.55rem;
+  }
+
+  .player-name-text {
+    max-width: 65px;
+    font-size: 0.74rem;
+  }
+
+  .btn-circle-action {
+    width: 32px;
+    height: 32px;
+  }
+
+  .hud-adventure-mission, .hud-powerups-container {
+    max-width: min(92vw, 48vh, 370px);
+  }
+
+  .adventure-levels-grid {
+    gap: 5px;
+  }
+
+  .adventure-level-btn {
+    padding: 0.4rem 0.1rem;
+  }
+
+  .adventure-level-btn .lvl-num {
+    font-size: 0.65rem;
+  }
+
+  .adventure-level-btn .lvl-stars {
+    font-size: 0.62rem;
+  }
+
+  .daily-streak-grid {
+    gap: 3px;
+  }
+
+  .streak-day-card {
+    padding: 0.35rem 0.1rem;
+  }
+
+  .streak-day-label {
+    font-size: 0.58rem;
+  }
+
+  .streak-day-coin {
+    font-size: 0.65rem;
+  }
+
+  .fashion-items-grid {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+}
