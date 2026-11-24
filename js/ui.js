@@ -53,6 +53,14 @@ const UI = (() => {
     els.btnHomeFullscreen = document.getElementById('btn-home-fullscreen');
     els.heroCanvas = document.getElementById('hero-canvas');
 
+    // Loading screen elements
+    els.screenLoading = document.getElementById('screen-loading');
+    els.loadingCanvas = document.getElementById('loading-canvas');
+    els.loadingBarFill = document.getElementById('loading-bar-fill');
+    els.loadingPercentText = document.getElementById('loading-percent-text');
+    els.loadingStatusText = document.getElementById('loading-status-text');
+    els.btnSkipLoading = document.getElementById('btn-skip-loading');
+
     // HUD elements
     els.hudModeVal = document.getElementById('hud-mode-val');
     els.hudScore = document.getElementById('hud-score-val');
@@ -155,12 +163,12 @@ const UI = (() => {
     els.dpadRight = document.getElementById('dpad-right');
   };
 
-  // Setup prominent animated cartoon mascot showcase on home screen
+  // Setup prominent animated cartoon mascot showcase on loading screen
   const initHeroCanvas = () => {
-    if (!els.heroCanvas) return;
-    const canvas = els.heroCanvas;
+    const canvas = els.loadingCanvas || els.heroCanvas;
+    if (!canvas) return;
     canvas.width = 600;
-    canvas.height = 220;
+    canvas.height = 250;
     const ctx = canvas.getContext('2d');
     let t = 0;
 
@@ -714,6 +722,103 @@ const UI = (() => {
     renderHero();
   };
 
+  // Full-Screen Mascot Loading Sequence State & Controller
+  let loadingCompleted = false;
+
+  const completeLoadingScreen = () => {
+    if (loadingCompleted) return;
+    loadingCompleted = true;
+
+    if (els.loadingBarFill) els.loadingBarFill.style.width = '100%';
+    if (els.loadingPercentText) els.loadingPercentText.textContent = '100%';
+    if (els.loadingStatusText) els.loadingStatusText.textContent = 'Ready to Slither!';
+
+    try {
+      if (typeof SoundEngine !== 'undefined') {
+        if (SoundEngine.playBonus) SoundEngine.playBonus();
+        else if (SoundEngine.playClick) SoundEngine.playClick();
+      }
+    } catch (_) {}
+
+    if (els.screenLoading) {
+      els.screenLoading.classList.add('fade-out');
+      setTimeout(() => {
+        els.screenLoading.classList.add('is-hidden');
+        if (heroAnimationId) {
+          cancelAnimationFrame(heroAnimationId);
+          heroAnimationId = null;
+        }
+      }, 450);
+    }
+  };
+
+  const initLoadingSequence = () => {
+    if (!els.screenLoading) {
+      initHeroCanvas();
+      return;
+    }
+
+    // Start mascot canvas animation
+    initHeroCanvas();
+
+    let progress = 0;
+    const tips = [
+      { at: 0, text: 'Waking up the happy snake...' },
+      { at: 24, text: 'Planting fresh strawberries...' },
+      { at: 50, text: 'Preparing Adventure Worlds...' },
+      { at: 75, text: 'Polishing candy & ice mazes...' },
+      { at: 94, text: 'Ready to Slither!' }
+    ];
+
+    const startTime = performance.now();
+    const duration = 1850; // Smooth 1.85s casual arcade game intro
+
+    const updateLoader = (now) => {
+      if (loadingCompleted) return;
+      const elapsed = now - startTime;
+      const tNorm = Math.min(1, elapsed / duration);
+      // Easing: ease-out quad for swift start and pleasant finish
+      progress = Math.min(100, Math.round((1 - Math.pow(1 - tNorm, 2.2)) * 100));
+
+      if (els.loadingBarFill) {
+        els.loadingBarFill.style.width = `${progress}%`;
+      }
+      if (els.loadingPercentText) {
+        els.loadingPercentText.textContent = `${progress}%`;
+      }
+
+      // Update friendly loading message
+      for (let i = tips.length - 1; i >= 0; i--) {
+        if (progress >= tips[i].at) {
+          if (els.loadingStatusText && els.loadingStatusText.textContent !== tips[i].text) {
+            els.loadingStatusText.textContent = tips[i].text;
+          }
+          break;
+        }
+      }
+
+      if (tNorm < 1) {
+        requestAnimationFrame(updateLoader);
+      } else {
+        setTimeout(completeLoadingScreen, 220);
+      }
+    };
+
+    requestAnimationFrame(updateLoader);
+
+    // Skip loading on click or tap
+    if (els.btnSkipLoading) {
+      els.btnSkipLoading.addEventListener('click', (e) => {
+        e.stopPropagation();
+        completeLoadingScreen();
+      });
+    }
+
+    els.screenLoading.addEventListener('click', () => {
+      completeLoadingScreen();
+    });
+  };
+
   return {
     init() {
       cacheElements();
@@ -724,7 +829,7 @@ const UI = (() => {
       this.updateHomeModeBanner();
       this.updateBestScoreDisplay();
       this.updateSoundToggles();
-      initHeroCanvas();
+      initLoadingSequence();
       this.bindEvents();
       if (typeof DailySystem !== 'undefined') {
         DailySystem.getStreakInfo();
@@ -1233,7 +1338,7 @@ const UI = (() => {
         this.updatePlayerProfile();
         this.updateHomeModeBanner();
         this.updateBestScoreDisplay();
-        initHeroCanvas();
+        if (!loadingCompleted) initHeroCanvas();
       }
     },
 
