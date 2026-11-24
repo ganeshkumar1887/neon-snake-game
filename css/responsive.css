@@ -602,11 +602,70 @@
     height: 32px;
   }
 
+  /* Game Over, Pause & Level Clear Modals: Full Viewport Responsive Box */
+  .pause-card, .levelclear-card, .gameover-card {
+    width: 100% !important;
+    max-width: min(92vw, 390px) !important;
+    padding: 1.35rem 1.15rem !important;
+    gap: 0.65rem !important;
+    border-radius: 24px !important;
+    max-height: calc(100dvh - 2rem) !important;
+  }
+
+  .gameover-title, .pause-title, .levelclear-title {
+    font-size: 1.35rem !important;
+  }
+
+  .gameover-stats-grid {
+    gap: 6px !important;
+  }
+
+  .stat-box {
+    padding: 0.45rem 0.35rem !important;
+    border-radius: 14px !important;
+  }
+
+  .stat-label {
+    font-size: 0.62rem !important;
+  }
+
+  .stat-val {
+    font-size: 1.15rem !important;
+  }
+
+  .gameover-actions, .pause-actions {
+    gap: 0.45rem !important;
+  }
+
+  .gameover-actions .btn, .pause-actions .btn {
+    padding: 0.65rem 1rem !important;
+    font-size: 0.88rem !important;
+    border-radius: 14px !important;
+  }
+
   .footer-desktop-hint { display: none !important; }
   .footer-mobile-hint { display: block !important; }
 }
 
 @media (max-width: 360px) {
+  .pause-card, .levelclear-card, .gameover-card {
+    padding: 1rem 0.85rem !important;
+    gap: 0.5rem !important;
+  }
+
+  .gameover-title, .pause-title, .levelclear-title {
+    font-size: 1.2rem !important;
+  }
+
+  .stat-val {
+    font-size: 1rem !important;
+  }
+
+  .gameover-actions .btn, .pause-actions .btn {
+    padding: 0.55rem 0.85rem !important;
+    font-size: 0.82rem !important;
+  }
+
   .dpad-grid {
     width: 186px;
     height: 186px;
