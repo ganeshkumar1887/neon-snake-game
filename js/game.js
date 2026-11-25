@@ -749,6 +749,12 @@ const Game = (() => {
       }
     }, { passive: true });
 
+    canvas.addEventListener('touchmove', (e) => {
+      if (currentState === STATES.PLAYING) {
+        e.preventDefault();
+      }
+    }, { passive: false });
+
     canvas.addEventListener('touchend', (e) => {
       if (currentState !== STATES.PLAYING) return;
       if (!e.changedTouches || e.changedTouches.length === 0) return;

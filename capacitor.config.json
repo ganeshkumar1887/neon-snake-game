@@ -1,5 +1,5 @@
-{
+﻿{
   "appId": "com.neonsnake.game",
   "appName": "NEON SNAKE",
-  "webDir": "dir"
+  "webDir": "www"
 }
