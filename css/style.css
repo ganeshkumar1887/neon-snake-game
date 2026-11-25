@@ -2577,13 +2577,33 @@ input:checked + .slider:before {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(180deg, #F5F3FF 0%, #EDE9FE 100%);
+  background: linear-gradient(180deg, #F8FAFC 0%, #F5F3FF 55%, #EDE9FE 100%);
   border: 2px dashed #C4B5FD;
-  border-radius: 20px;
-  padding: 0.75rem;
+  border-radius: 22px;
+  padding: 0.6rem 0.75rem 0.75rem 0.75rem;
   position: relative;
+  min-height: 190px;
+  box-shadow: inset 0 2px 10px rgba(139, 92, 246, 0.08);
+}
+.fashion-preview-pill {
+  margin-bottom: 2px;
+}
+.fashion-preview-title {
+  font-family: var(--font-display);
+  font-size: 0.78rem;
+  font-weight: 800;
+  color: #7C3AED;
+  background: #FFFFFF;
+  padding: 3px 12px;
+  border-radius: 20px;
+  border: 1px solid #DDD6FE;
+  box-shadow: 0 2px 6px rgba(124, 58, 237, 0.1);
+  letter-spacing: 0.2px;
 }
 .fashion-preview-canvas {
+  width: 100%;
+  max-width: 280px;
+  height: 150px;
   display: block;
 }
 .fashion-coins-tag {
@@ -2637,12 +2657,22 @@ input:checked + .slider:before {
   border: 1.5px solid #E5E7EB;
   border-radius: 16px;
   box-shadow: 0 2px 6px rgba(0,0,0,0.04);
-  transition: transform 0.12s ease;
+  cursor: pointer;
+  transition: transform 0.12s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+}
+.fashion-item-card:hover {
+  transform: translateY(-2px);
+  border-color: #C4B5FD;
+}
+.fashion-item-card.preview-active {
+  border-color: #8B5CF6;
+  background: #FDFBFF;
+  box-shadow: 0 0 0 2px rgba(139, 92, 246, 0.4);
 }
 .fashion-item-card.equipped {
-  border-color: #8B5CF6;
-  background: #F5F3FF;
-  box-shadow: 0 0 0 1.5px #8B5CF6;
+  border-color: #10B981;
+  background: #F0FDF4;
+  box-shadow: 0 0 0 1.5px #10B981;
 }
 .fashion-preview-color {
   width: 32px;

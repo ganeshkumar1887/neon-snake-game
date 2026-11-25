@@ -1508,6 +1508,7 @@ const UI = (() => {
         return;
       }
       modal.classList.remove('hide');
+      modal.classList.add('active');
       modal.style.display = 'flex';
       modal.style.pointerEvents = 'auto';
       modal.style.opacity = '1';
@@ -1518,6 +1519,7 @@ const UI = (() => {
       const modal = (typeof target === 'string') ? document.getElementById(target) : (target || null);
       if (!modal) return;
       modal.classList.add('hide');
+      modal.classList.remove('active');
       modal.style.display = 'none';
       modal.style.pointerEvents = 'none';
       modal.setAttribute('aria-hidden', 'true');
@@ -1940,9 +1942,25 @@ const UI = (() => {
     // ==========================================
     openFashionModal() {
       if (typeof FashionStudio === 'undefined') return;
+      this.fashionPreviewSkin = (typeof Storage !== 'undefined' ? Storage.getEquippedSkin() : 'skin_green') || 'skin_green';
+      this.fashionPreviewHat = (typeof Storage !== 'undefined' ? Storage.getEquippedHat() : 'hat_none') || 'hat_none';
       this.renderFashionStudio('skins');
       this.openModal('modal-fashion');
       this.startFashionPreview();
+    },
+
+    setFashionPreviewItem(type, id) {
+      if (type === 'skin') {
+        this.fashionPreviewSkin = id;
+      } else if (type === 'hat') {
+        this.fashionPreviewHat = id;
+      }
+      try {
+        if (typeof SoundEngine !== 'undefined') SoundEngine.playClick();
+      } catch (_) {}
+      const activeTab = document.querySelector('.fashion-tab-btn.active');
+      const tabName = activeTab ? activeTab.getAttribute('data-tab') : 'skins';
+      this.renderFashionStudio(tabName);
     },
 
     startFashionPreview() {
@@ -1950,36 +1968,129 @@ const UI = (() => {
       if (!canvas) return;
       const ctx = canvas.getContext('2d');
       const dpr = window.devicePixelRatio || 1;
-      canvas.width = 160 * dpr;
-      canvas.height = 140 * dpr;
+      canvas.width = 280 * dpr;
+      canvas.height = 160 * dpr;
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+      if (this.fashionPreviewAnimId) {
+        cancelAnimationFrame(this.fashionPreviewAnimId);
+        this.fashionPreviewAnimId = null;
+      }
 
       const renderPreview = () => {
         const modal = document.getElementById('modal-fashion');
-        if (!modal || !modal.classList.contains('active')) return;
+        if (!modal || modal.classList.contains('hide') || modal.style.display === 'none') {
+          this.fashionPreviewAnimId = null;
+          return;
+        }
 
         const time = performance.now();
-        ctx.clearRect(0, 0, 160, 140);
+        ctx.clearRect(0, 0, 280, 160);
 
         // Soft pastel preview pedestal
-        ctx.fillStyle = '#FAF5FF';
+        const pedGrad = ctx.createRadialGradient(140, 138, 10, 140, 138, 90);
+        pedGrad.addColorStop(0, '#EDE9FE');
+        pedGrad.addColorStop(0.7, '#E0E7FF');
+        pedGrad.addColorStop(1, 'rgba(224, 231, 255, 0)');
+        ctx.fillStyle = pedGrad;
         ctx.beginPath();
-        ctx.ellipse(80, 110, 60, 20, 0, 0, Math.PI * 2);
+        ctx.ellipse(140, 138, 85, 18, 0, 0, Math.PI * 2);
         ctx.fill();
 
+        // Drop shadow under mascot
+        ctx.fillStyle = 'rgba(76, 29, 149, 0.12)';
+        ctx.beginPath();
+        ctx.ellipse(140, 137, 60, 9, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Gentle floating bounce
         ctx.save();
-        ctx.translate(80, 75);
-        const floatY = Math.sin(time * 0.004) * 4;
-        ctx.translate(0, floatY);
+        const floatY = Math.sin(time * 0.0035) * 4;
+        ctx.translate(140, 85 + floatY);
 
         const cellSize = 38;
-        const pal = FashionStudio.getActiveColors();
-        const activeHat = FashionStudio.getActiveHat();
+        const skinId = this.fashionPreviewSkin || (typeof Storage !== 'undefined' ? Storage.getEquippedSkin() : 'skin_green') || 'skin_green';
+        const hatId = (this.fashionPreviewHat !== undefined) ? this.fashionPreviewHat : (typeof Storage !== 'undefined' ? Storage.getEquippedHat() : 'hat_none');
+        const skinObj = FashionStudio.getSkin(skinId);
+        const pal = (skinObj && skinObj.colors) ? skinObj.colors : FashionStudio.getActiveColors();
+
+        // Sync preview badge title
+        const titleEl = document.getElementById('fashion-preview-title');
+        if (titleEl) {
+          const hatObj = FashionStudio.getHats().find(h => h.id === hatId);
+          const hatTxt = (hatId && hatId !== 'hat_none' && hatObj) ? ` • 🎩 ${hatObj.name}` : '';
+          const nameTxt = `✨ ${skinObj ? skinObj.name : 'Classic'}${hatTxt}`;
+          if (titleEl.textContent !== nameTxt) {
+            titleEl.textContent = nameTxt;
+          }
+        }
+
+        // Draw coiled snake body segments
+        const bodySegments = [
+          { x: -58, y: 32, r: 12 },
+          { x: -44, y: 36, r: 15 },
+          { x: -24, y: 34, r: 18 },
+          { x: -4, y: 28, r: 20 },
+          { x: 16, y: 18, r: 22 },
+          { x: 0, y: 0, r: 24 }
+        ];
+
+        for (let i = 0; i < bodySegments.length - 1; i++) {
+          const p1 = bodySegments[i];
+          const p2 = bodySegments[i + 1];
+          ctx.save();
+          ctx.strokeStyle = pal.shade || '#26850E';
+          ctx.lineWidth = p2.r * 1.8;
+          ctx.lineCap = 'round';
+          ctx.beginPath();
+          ctx.moveTo(p1.x, p1.y);
+          ctx.lineTo(p2.x, p2.y);
+          ctx.stroke();
+
+          ctx.strokeStyle = pal.body || '#4ECB23';
+          ctx.lineWidth = p2.r * 1.45;
+          ctx.stroke();
+
+          ctx.strokeStyle = pal.belly || '#FFF58A';
+          ctx.lineWidth = p2.r * 0.55;
+          ctx.stroke();
+          ctx.restore();
+        }
+
+        for (let i = 0; i < bodySegments.length - 1; i++) {
+          const seg = bodySegments[i];
+          ctx.save();
+          ctx.translate(seg.x, seg.y);
+
+          const grad = ctx.createRadialGradient(-seg.r * 0.25, -seg.r * 0.3, 1, 0, 0, seg.r);
+          grad.addColorStop(0, pal.crest || '#85EA46');
+          grad.addColorStop(0.5, pal.body || '#4ECB23');
+          grad.addColorStop(1, pal.shade || '#26850E');
+
+          ctx.fillStyle = grad;
+          ctx.beginPath();
+          ctx.arc(0, 0, seg.r, 0, Math.PI * 2);
+          ctx.fill();
+
+          ctx.fillStyle = pal.belly || '#FFF58A';
+          ctx.beginPath();
+          ctx.ellipse(0, seg.r * 0.35, seg.r * 0.75, seg.r * 0.38, 0, 0, Math.PI);
+          ctx.fill();
+
+          ctx.fillStyle = 'rgba(255, 255, 255, 0.65)';
+          ctx.beginPath();
+          ctx.ellipse(-seg.r * 0.25, -seg.r * 0.35, seg.r * 0.4, seg.r * 0.2, -Math.PI / 8, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.restore();
+        }
 
         // Draw preview cartoon head
         ctx.save();
-        const headLen = cellSize * 0.76;
-        const headWidth = cellSize * 0.64;
+        ctx.translate(14, -6);
+        ctx.rotate(-0.08);
+
+        const headLen = cellSize * 0.82;
+        const headWidth = cellSize * 0.68;
 
         // Head shadow
         ctx.fillStyle = 'rgba(22, 101, 52, 0.15)';
@@ -2016,45 +2127,75 @@ const UI = (() => {
           ctx.fill();
         });
 
-        // Eyes
-        const eyeX = headLen * 0.16;
+        // Blinking & Smiling Eyes
+        const isBlink = (Math.floor(time / 2600) % 6 === 0) && (time % 2600 < 180);
+        const eyeX = headLen * 0.18;
         const eyeY = headWidth * 0.36;
-        const eyeRadius = cellSize * 0.16;
+        const eyeRadius = cellSize * 0.17;
         [-1, 1].forEach(side => {
-          ctx.fillStyle = '#FFFFFF';
-          ctx.beginPath();
-          ctx.arc(eyeX, eyeY * side, eyeRadius, 0, Math.PI * 2);
-          ctx.fill();
+          if (isBlink) {
+            ctx.strokeStyle = pal.eyePupil || '#1E1B24';
+            ctx.lineWidth = 2.4;
+            ctx.lineCap = 'round';
+            ctx.beginPath();
+            ctx.arc(eyeX, eyeY * side, eyeRadius * 0.7, 0.2, Math.PI - 0.2);
+            ctx.stroke();
+          } else {
+            ctx.fillStyle = '#FFFFFF';
+            ctx.beginPath();
+            ctx.arc(eyeX, eyeY * side, eyeRadius, 0, Math.PI * 2);
+            ctx.fill();
 
-          ctx.fillStyle = pal.eyePupil || '#1E1B24';
-          ctx.beginPath();
-          ctx.arc(eyeX + 0.5, eyeY * side, eyeRadius * 0.78, 0, Math.PI * 2);
-          ctx.fill();
+            ctx.fillStyle = pal.eyePupil || '#1E1B24';
+            ctx.beginPath();
+            ctx.arc(eyeX + 0.6, eyeY * side, eyeRadius * 0.78, 0, Math.PI * 2);
+            ctx.fill();
 
-          ctx.fillStyle = '#FFFFFF';
-          ctx.beginPath();
-          ctx.arc(eyeX - eyeRadius * 0.22, eyeY * side - eyeRadius * 0.25 * side, eyeRadius * 0.34, 0, Math.PI * 2);
-          ctx.fill();
+            ctx.fillStyle = '#FFFFFF';
+            ctx.beginPath();
+            ctx.arc(eyeX - eyeRadius * 0.22, eyeY * side - eyeRadius * 0.25 * side, eyeRadius * 0.35, 0, Math.PI * 2);
+            ctx.arc(eyeX + eyeRadius * 0.28, eyeY * side + eyeRadius * 0.28 * side, eyeRadius * 0.16, 0, Math.PI * 2);
+            ctx.fill();
+          }
         });
 
         // Smile
         ctx.strokeStyle = pal.shade || '#26850E';
-        ctx.lineWidth = 1.4;
+        ctx.lineWidth = 1.6;
         ctx.beginPath();
-        ctx.arc(headLen * 0.38, 0, headWidth * 0.16, -Math.PI / 3, Math.PI / 3);
+        ctx.arc(headLen * 0.36, 0, headWidth * 0.18, -Math.PI / 3.2, Math.PI / 3.2);
         ctx.stroke();
 
+        const tongueTime = (time % 3200);
+        if (tongueTime > 1200 && tongueTime < 1800) {
+          const tProgress = Math.sin(((tongueTime - 1200) / 600) * Math.PI);
+          ctx.strokeStyle = pal.tongue || '#FF6B8B';
+          ctx.lineWidth = 2.2;
+          ctx.beginPath();
+          ctx.moveTo(headLen * 0.52, 0);
+          ctx.lineTo(headLen * 0.52 + 10 * tProgress, 0);
+          ctx.stroke();
+        }
+
+        // Snout Top Gloss
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
+        ctx.beginPath();
+        ctx.ellipse(headLen * 0.15, -headWidth * 0.2, 8, 3.2, -Math.PI / 6, 0, Math.PI * 2);
+        ctx.fill();
+
         // Wearable Hat & Evolution
-        FashionStudio.drawHatOnHead(ctx, cellSize, activeHat, time);
-        SnakeEvolution.drawEvolutionFeatures(ctx, cellSize, time);
+        FashionStudio.drawHatOnHead(ctx, cellSize, hatId, time);
+        if (typeof SnakeEvolution !== 'undefined') {
+          SnakeEvolution.drawEvolutionFeatures(ctx, cellSize, time);
+        }
 
         ctx.restore();
         ctx.restore();
 
-        requestAnimationFrame(renderPreview);
+        this.fashionPreviewAnimId = requestAnimationFrame(renderPreview);
       };
 
-      requestAnimationFrame(renderPreview);
+      this.fashionPreviewAnimId = requestAnimationFrame(renderPreview);
     },
 
     renderFashionStudio(tab = 'skins') {
@@ -2070,43 +2211,69 @@ const UI = (() => {
       if (tab === 'skins') {
         const skins = FashionStudio.getSkins();
         const equipped = Storage.getEquippedSkin();
+        const currentPreview = this.fashionPreviewSkin || equipped;
+
         skins.forEach(s => {
           const isUnlocked = Storage.isFashionUnlocked(s.id);
           const isEquipped = equipped === s.id;
+          const isPreviewing = currentPreview === s.id;
           const card = document.createElement('div');
-          card.className = `fashion-item-card ${isEquipped ? 'equipped' : ''}`;
+          card.className = `fashion-item-card ${isEquipped ? 'equipped' : ''} ${isPreviewing ? 'preview-active' : ''}`;
+          card.title = 'Tap to preview';
           card.innerHTML = `
             <div class="fashion-preview-color" style="background:${s.colors.body}; border:3px solid ${s.colors.crest}"></div>
             <div class="fashion-item-info">
               <span class="fashion-item-title">${s.name}</span>
               <span class="fashion-item-price">${isUnlocked ? 'Unlocked' : `🪙 ${s.cost}`}</span>
             </div>
-            <button type="button" class="btn-fashion-action ${isEquipped ? 'btn-equipped' : isUnlocked ? 'btn-equip' : 'btn-buy'}"
-              onclick="UI.handleFashionClick('skin', '${s.id}', ${s.cost})">
+            <button type="button" class="btn-fashion-action ${isEquipped ? 'btn-equipped' : isUnlocked ? 'btn-equip' : 'btn-buy'}">
               ${isEquipped ? 'EQUIPPED' : isUnlocked ? 'EQUIP' : `BUY 🪙${s.cost}`}
             </button>
           `;
+
+          card.addEventListener('click', (e) => {
+            if (e.target.closest('.btn-fashion-action')) {
+              e.stopPropagation();
+              this.handleFashionClick('skin', s.id, s.cost);
+            } else {
+              this.setFashionPreviewItem('skin', s.id);
+            }
+          });
+
           container.appendChild(card);
         });
       } else if (tab === 'hats') {
         const hats = FashionStudio.getHats();
         const equipped = Storage.getEquippedHat();
+        const currentPreview = this.fashionPreviewHat !== undefined ? this.fashionPreviewHat : equipped;
+
         hats.forEach(h => {
           const isUnlocked = Storage.isFashionUnlocked(h.id);
           const isEquipped = equipped === h.id;
+          const isPreviewing = currentPreview === h.id;
           const card = document.createElement('div');
-          card.className = `fashion-item-card ${isEquipped ? 'equipped' : ''}`;
+          card.className = `fashion-item-card ${isEquipped ? 'equipped' : ''} ${isPreviewing ? 'preview-active' : ''}`;
+          card.title = 'Tap to preview';
           card.innerHTML = `
             <div class="fashion-preview-badge">${h.badge}</div>
             <div class="fashion-item-info">
               <span class="fashion-item-title">${h.name}</span>
               <span class="fashion-item-price">${isUnlocked ? 'Unlocked' : `🪙 ${h.cost}`}</span>
             </div>
-            <button type="button" class="btn-fashion-action ${isEquipped ? 'btn-equipped' : isUnlocked ? 'btn-equip' : 'btn-buy'}"
-              onclick="UI.handleFashionClick('hat', '${h.id}', ${h.cost})">
+            <button type="button" class="btn-fashion-action ${isEquipped ? 'btn-equipped' : isUnlocked ? 'btn-equip' : 'btn-buy'}">
               ${isEquipped ? 'EQUIPPED' : isUnlocked ? 'EQUIP' : `BUY 🪙${h.cost}`}
             </button>
           `;
+
+          card.addEventListener('click', (e) => {
+            if (e.target.closest('.btn-fashion-action')) {
+              e.stopPropagation();
+              this.handleFashionClick('hat', h.id, h.cost);
+            } else {
+              this.setFashionPreviewItem('hat', h.id);
+            }
+          });
+
           container.appendChild(card);
         });
       } else if (tab === 'patterns') {
@@ -2135,16 +2302,28 @@ const UI = (() => {
 
     handleFashionClick(type, id, cost) {
       if (Storage.isFashionUnlocked(id)) {
-        if (type === 'skin') Storage.setEquippedSkin(id);
-        else if (type === 'hat') Storage.setEquippedHat(id);
-        else if (type === 'pattern') Storage.setEquippedPattern(id);
+        if (type === 'skin') {
+          Storage.setEquippedSkin(id);
+          this.fashionPreviewSkin = id;
+        } else if (type === 'hat') {
+          Storage.setEquippedHat(id);
+          this.fashionPreviewHat = id;
+        } else if (type === 'pattern') {
+          Storage.setEquippedPattern(id);
+        }
         SoundEngine.playClick();
       } else {
         const success = FashionStudio.unlockItem(id, cost);
         if (success) {
-          if (type === 'skin') Storage.setEquippedSkin(id);
-          else if (type === 'hat') Storage.setEquippedHat(id);
-          else if (type === 'pattern') Storage.setEquippedPattern(id);
+          if (type === 'skin') {
+            Storage.setEquippedSkin(id);
+            this.fashionPreviewSkin = id;
+          } else if (type === 'hat') {
+            Storage.setEquippedHat(id);
+            this.fashionPreviewHat = id;
+          } else if (type === 'pattern') {
+            Storage.setEquippedPattern(id);
+          }
           this.updateCoinsDisplay();
           this.showToast({
             title: 'Fashion Unlocked!',
