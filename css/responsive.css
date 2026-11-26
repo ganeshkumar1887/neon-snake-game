@@ -579,9 +579,11 @@
   }
 
   .dpad-grid {
-    width: 236px;
-    height: 236px;
-    gap: 12px;
+    grid-template-columns: 72px 36px 72px;
+    grid-template-rows: 72px 36px 72px;
+    width: 184px;
+    height: 184px;
+    gap: 2px;
   }
 
   .dpad-btn {
@@ -596,15 +598,17 @@
   }
 
   .dpad-center {
-    width: 46px;
-    height: 46px;
+    width: 30px;
+    height: 30px;
   }
 
   /* Support for settings touch sizes */
   .mobile-controls.size-compact .dpad-grid {
-    width: 196px;
-    height: 196px;
-    gap: 9px;
+    grid-template-columns: 60px 30px 60px;
+    grid-template-rows: 60px 30px 60px;
+    width: 154px;
+    height: 154px;
+    gap: 2px;
   }
   .mobile-controls.size-compact .dpad-btn {
     width: 60px;
@@ -614,11 +618,17 @@
     width: 26px;
     height: 26px;
   }
+  .mobile-controls.size-compact .dpad-center {
+    width: 24px;
+    height: 24px;
+  }
 
   .mobile-controls.size-normal .dpad-grid {
-    width: 236px;
-    height: 236px;
-    gap: 12px;
+    grid-template-columns: 72px 36px 72px;
+    grid-template-rows: 72px 36px 72px;
+    width: 184px;
+    height: 184px;
+    gap: 2px;
   }
   .mobile-controls.size-normal .dpad-btn {
     width: 72px;
@@ -630,9 +640,11 @@
   }
 
   .mobile-controls.size-large .dpad-grid {
-    width: 262px;
-    height: 262px;
-    gap: 13px;
+    grid-template-columns: 80px 40px 80px;
+    grid-template-rows: 80px 40px 80px;
+    width: 204px;
+    height: 204px;
+    gap: 2px;
   }
   .mobile-controls.size-large .dpad-btn {
     width: 80px;
@@ -641,6 +653,10 @@
   .mobile-controls.size-large .dpad-btn svg {
     width: 36px;
     height: 36px;
+  }
+  .mobile-controls.size-large .dpad-center {
+    width: 34px;
+    height: 34px;
   }
 
   /* Game Over, Pause & Level Clear Modals: Full Viewport Responsive Box */
@@ -708,9 +724,11 @@
   }
 
   .dpad-grid {
-    width: 204px;
-    height: 204px;
-    gap: 9px;
+    grid-template-columns: 62px 32px 62px;
+    grid-template-rows: 62px 32px 62px;
+    width: 160px;
+    height: 160px;
+    gap: 2px;
   }
 
   .dpad-btn {
@@ -721,6 +739,11 @@
   .dpad-btn svg {
     width: 28px;
     height: 28px;
+  }
+
+  .dpad-center {
+    width: 26px;
+    height: 26px;
   }
 }
 
