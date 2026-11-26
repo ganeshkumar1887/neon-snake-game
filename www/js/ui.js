@@ -838,7 +838,8 @@ const UI = (() => {
       initLoadingSequence();
       this.bindEvents();
       if (typeof DailySystem !== 'undefined') {
-        DailySystem.getStreakInfo();
+        DailySystem.init();
+        this.updateStreakDisplay();
       }
     },
 
@@ -2332,24 +2333,89 @@ const UI = (() => {
     },
 
     // ==========================================
-    // Daily Rewards & Missions Modal
+    // Daily Rewards, 7-Day Streak & Missions
     // ==========================================
+    updateStreakDisplay() {
+      if (typeof DailySystem === 'undefined') return;
+      const info = DailySystem.getStreakInfo();
+      const rewards = DailySystem.getStreakRewards();
+
+      const headerPill = document.getElementById('btn-header-streak');
+      const headerVal = document.getElementById('header-streak-val');
+      if (headerVal) {
+        headerVal.textContent = `${info.streak}/7`;
+      }
+      if (headerPill) {
+        headerPill.classList.toggle('streak-ready-pulse', !info.isClaimedToday);
+      }
+
+      const homeCount = document.getElementById('home-streak-count');
+      if (homeCount) {
+        homeCount.textContent = `${info.streak}/7`;
+      }
+
+      const homeDots = document.getElementById('home-streak-dots');
+      if (homeDots) {
+        homeDots.innerHTML = rewards.map(r => {
+          const isDone = r.day < info.streak || (r.day === info.streak && info.isClaimedToday);
+          const isToday = r.day === info.streak && !info.isClaimedToday;
+          const isDay7 = r.day === 7;
+          const cls = isDone ? 'done' : isToday ? 'today' : 'future';
+          const label = isDay7 ? '👑' : (isDone ? '✓' : `D${r.day}`);
+          return `<div class="home-streak-dot ${cls} ${isDay7 ? 'day-7' : ''}" title="Day ${r.day}: ${r.coins} Coins">${label}</div>`;
+        }).join('');
+      }
+
+      const btnHomeAction = document.getElementById('btn-home-streak-action');
+      if (btnHomeAction) {
+        if (info.isClaimedToday) {
+          btnHomeAction.textContent = 'CLAIMED ✓';
+          btnHomeAction.classList.add('is-claimed');
+        } else {
+          const todayCoins = rewards[info.streak - 1] ? rewards[info.streak - 1].coins : 50;
+          btnHomeAction.textContent = info.streak === 7 ? 'CLAIM 👑' : `CLAIM 🪙${todayCoins}`;
+          btnHomeAction.classList.remove('is-claimed');
+        }
+      }
+    },
+
+    handleHomeStreakAction() {
+      if (typeof DailySystem === 'undefined') return;
+      const info = DailySystem.getStreakInfo();
+      if (!info.isClaimedToday) {
+        this.claimTodayStreak(false);
+      } else {
+        this.openDailyModal();
+      }
+    },
+
     openDailyModal() {
       if (typeof DailySystem === 'undefined') return;
       const rewards = DailySystem.getStreakRewards();
       const info = DailySystem.getStreakInfo();
+
+      const summaryEl = document.getElementById('streak-stats-summary');
+      if (summaryEl) {
+        summaryEl.innerHTML = `
+          <span class="streak-stat-chip">🔥 ${info.streak}/7 Cycle</span>
+          <span class="streak-stat-chip">🏆 Best: ${info.longestStreak || info.streak}d</span>
+          <span class="streak-stat-chip">👑 7-Day Wins: ${info.completed7DayCount || 0}</span>
+        `;
+      }
+
       const streakGrid = document.getElementById('daily-streak-grid');
       if (streakGrid) {
         streakGrid.innerHTML = '';
         rewards.forEach(r => {
           const isToday = r.day === info.streak;
           const isPassed = r.day < info.streak;
+          const isDay7 = r.day === 7;
           const card = document.createElement('div');
-          card.className = `streak-day-card ${isToday ? 'today' : isPassed ? 'done' : 'future'}`;
+          card.className = `streak-day-card ${isToday ? 'today' : isPassed ? 'done' : 'future'} ${isDay7 ? 'day-7' : ''}`;
           card.innerHTML = `
-            <span class="streak-day-label">Day ${r.day}</span>
-            <span class="streak-day-coin">🪙 ${r.coins}</span>
-            ${isPassed ? '<span class="streak-check">✓</span>' : isToday && info.isClaimedToday ? '<span class="streak-claimed">CLAIMED</span>' : isToday ? '<span class="streak-ready">READY</span>' : ''}
+            <span class="streak-day-label">${isDay7 ? 'DAY 7 👑' : `Day ${r.day}`}</span>
+            <span class="streak-day-coin">🪙 ${r.coins}${isDay7 ? ' + Hat' : ''}</span>
+            ${isPassed ? '<span class="streak-check">✓</span>' : isToday && info.isClaimedToday ? '<span class="streak-claimed">CLAIMED</span>' : isToday ? '<span class="streak-ready">READY</span>' : '<span class="streak-locked">🔒</span>'}
           `;
           streakGrid.appendChild(card);
         });
@@ -2358,10 +2424,14 @@ const UI = (() => {
         if (btnClaim) {
           if (info.isClaimedToday) {
             btnClaim.disabled = true;
-            btnClaim.textContent = 'CLAIMED TODAY ✓';
+            btnClaim.textContent = info.streak === 7
+              ? '7-DAY JACKPOT CLAIMED ✓'
+              : `CLAIMED TODAY ✓ (NEXT: DAY ${info.streak + 1})`;
           } else {
             btnClaim.disabled = false;
-            btnClaim.textContent = `CLAIM DAY ${info.streak} (🪙 ${rewards[info.streak - 1].coins})`;
+            btnClaim.textContent = info.streak === 7
+              ? 'CLAIM 7-DAY JACKPOT! (🪙 500 + 👑 CROWN + 250 XP)'
+              : `CLAIM DAY ${info.streak} (🪙 ${rewards[info.streak - 1].coins})`;
           }
         }
       }
@@ -2396,16 +2466,31 @@ const UI = (() => {
       this.openModal('modal-daily');
     },
 
-    claimTodayStreak() {
-      const rewarded = DailySystem.claimTodayStreak();
-      if (rewarded > 0) {
+    claimTodayStreak(reopenModal = true) {
+      const result = DailySystem.claimTodayStreak();
+      if (result && result.coins > 0) {
         this.updateCoinsDisplay();
-        this.openDailyModal();
-        this.showToast({
-          title: 'Daily Streak Claimed!',
-          desc: `+${rewarded} Coins added to your bank!`,
-          icon: '🪙'
-        });
+        this.updateEvolutionDisplay();
+        this.updateStreakDisplay();
+        if (reopenModal) {
+          this.openDailyModal();
+        }
+        if (result.isDay7Grand) {
+          const crownNote = result.crownUnlocked
+            ? 'Royal Crown Hat unlocked & equipped!'
+            : 'Bonus +200 Coins (Crown already owned)!';
+          this.showToast({
+            title: '7-DAY STREAK JACKPOT! 👑',
+            desc: `+${result.coins} Coins, +${result.expEarned} XP & ${crownNote}`,
+            icon: '🔥'
+          });
+        } else {
+          this.showToast({
+            title: `Day ${result.day} Streak Claimed!`,
+            desc: `+${result.coins} Coins added! Keep going for Day 7!`,
+            icon: '🔥'
+          });
+        }
       }
     },
 

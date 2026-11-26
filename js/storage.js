@@ -104,7 +104,8 @@ const Storage = (() => {
     { id: 'super_power', title: 'Super Powered', desc: 'Collect 10 adventure power-ups', reward: 150, icon: '<svg viewBox="0 0 24 24" class="achieve-svg"><path fill="#FFE987" d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>' },
     { id: 'evolution_mega', title: 'Mega Evolution', desc: 'Evolve your snake to Mega or Legendary stage', reward: 300, icon: '<svg viewBox="0 0 24 24" class="achieve-svg"><path fill="#FFD700" d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l7.1-1.01L12 2z"/></svg>' },
     { id: 'theme_collector', title: 'Chameleon', desc: 'Customise your snake with different themes', reward: 100, icon: '<svg viewBox="0 0 24 24" class="achieve-svg"><path fill="#A9EDB0" d="M12 3c-4.97 0-9 4.03-9 9 0 2.12.74 4.07 1.97 5.61L4.35 19.4c-.39.39-.39 1.02 0 1.41.39.39 1.02.39 1.41 0l1.9-1.9C9.22 19.64 10.57 20 12 20c4.97 0 9-4.03 9-9s-4.03-9-9-9zm-5 9c-.83 0-1.5-.67-1.5-1.5S6.17 9 7 9s1.5.67 1.5 1.5S7.83 12 7 12zm3-4c-.83 0-1.5-.67-1.5-1.5S9.17 5 10 5s1.5.67 1.5 1.5S10.83 8 10 8zm4 0c-.83 0-1.5-.67-1.5-1.5S13.17 5 14 5s1.5.67 1.5 1.5S14.83 8 14 8zm3 4c-.83 0-1.5-.67-1.5-1.5S16.17 9 17 9s1.5.67 1.5 1.5S17.83 12 17 12z"/></svg>' },
-    { id: 'infinity_legend', title: 'Infinity Legend', desc: 'Reach 300 points in Infinity Mode', reward: 250, icon: '<svg viewBox="0 0 24 24" class="achieve-svg"><path fill="#BFA5FF" d="M18.6 6.62c-1.44 0-2.8.56-3.77 1.53L12 10.98l-2.83-2.83A5.334 5.334 0 0 0 5.4 6.62a5.38 5.38 0 0 0-5.4 5.38c0 2.97 2.43 5.38 5.4 5.38 1.44 0 2.8-.56 3.77-1.53L12 13.02l2.83 2.83c.97.97 2.33 1.53 3.77 1.53 2.97 0 5.4-2.41 5.4-5.38 0-2.97-2.43-5.38-5.4-5.38zm-13.2 8.76c-1.87 0-3.38-1.52-3.38-3.38 0-1.87 1.51-3.38 3.38-3.38 1 0 1.95.42 2.62 1.09L10.3 12l-2.28 2.29c-.67.67-1.62 1.09-2.62 1.09zm13.2 0c-1 0-1.95-.42-2.62-1.09L13.7 12l2.28-2.29c.67-.67 1.62-1.09 2.62-1.09 1.87 0 3.38 1.51 3.38 3.38 0 1.86-1.51 3.38-3.38 3.38z"/></svg>' }
+    { id: 'infinity_legend', title: 'Infinity Legend', desc: 'Reach 300 points in Infinity Mode', reward: 250, icon: '<svg viewBox="0 0 24 24" class="achieve-svg"><path fill="#BFA5FF" d="M18.6 6.62c-1.44 0-2.8.56-3.77 1.53L12 10.98l-2.83-2.83A5.334 5.334 0 0 0 5.4 6.62a5.38 5.38 0 0 0-5.4 5.38c0 2.97 2.43 5.38 5.4 5.38 1.44 0 2.8-.56 3.77-1.53L12 13.02l2.83 2.83c.97.97 2.33 1.53 3.77 1.53 2.97 0 5.4-2.41 5.4-5.38 0-2.97-2.43-5.38-5.4-5.38zm-13.2 8.76c-1.87 0-3.38-1.52-3.38-3.38 0-1.87 1.51-3.38 3.38-3.38 1 0 1.95.42 2.62 1.09L10.3 12l-2.28 2.29c-.67.67-1.62 1.09-2.62 1.09zm13.2 0c-1 0-1.95-.42-2.62-1.09L13.7 12l2.28-2.29c.67-.67 1.62-1.09 2.62-1.09 1.87 0 3.38 1.51 3.38 3.38 0 1.86-1.51 3.38-3.38 3.38z"/></svg>' },
+    { id: 'streak_7', title: '7-Day Legend', desc: 'Complete a full 7-day daily login streak', reward: 200, icon: '<svg viewBox="0 0 24 24" class="achieve-svg"><path fill="#F97316" d="M13.5.67s.74 2.65.74 4.8c0 2.06-1.35 3.73-3.41 3.73-2.07 0-3.63-1.67-3.63-3.73l.03-.36C5.21 7.51 4 10.62 4 14c0 4.42 3.58 8 8 8s8-3.58 8-8C20 8.61 17.41 3.8 13.5.67zM11.71 19c-1.78 0-3.22-1.4-3.22-3.14 0-1.62 1.05-2.76 2.81-3.12 1.77-.36 3.6-1.21 4.62-2.58.39 1.29.59 2.65.59 4.04 0 2.65-2.15 4.8-4.8 4.8z"/></svg>' }
   ];
 
   // Default Player Statistics structure
@@ -455,51 +456,93 @@ const Storage = (() => {
     // ==========================================
     // Calendar Date-Based Daily Login & Missions
     // ==========================================
+    getTodayDateStr() {
+      const now = new Date();
+      const y = now.getFullYear();
+      const m = String(now.getMonth() + 1).padStart(2, '0');
+      const d = String(now.getDate()).padStart(2, '0');
+      return `${y}-${m}-${d}`;
+    },
+
     getDailyLogin() {
-      return getItem(KEYS.DAILY_LOGIN, {
+      const saved = getItem(KEYS.DAILY_LOGIN, {});
+      return {
         lastDate: null,
         streak: 0,
-        claimedDays: []
-      });
+        totalStreakDays: 0,
+        longestStreak: 0,
+        completed7DayCount: 0,
+        claimedDays: [],
+        ...saved
+      };
     },
 
     recordDailyLogin() {
-      const today = new Date().toISOString().slice(0, 10); // 'YYYY-MM-DD'
+      const today = this.getTodayDateStr();
       const data = this.getDailyLogin();
 
       if (data.lastDate === today) {
-        return { isNewDay: false, streak: data.streak, claimedDays: data.claimedDays };
+        const currentStreak = Math.max(1, Math.min(7, data.streak || 1));
+        return {
+          isNewDay: false,
+          streak: currentStreak,
+          totalStreakDays: data.totalStreakDays || currentStreak,
+          longestStreak: data.longestStreak || currentStreak,
+          completed7DayCount: data.completed7DayCount || 0,
+          claimedDays: data.claimedDays || []
+        };
       }
 
-      // Check if yesterday was last login
-      let streak = data.streak || 0;
+      const toUtcDayMs = (dateStr) => {
+        const parts = String(dateStr).split('-').map(Number);
+        if (parts.length !== 3 || parts.some(isNaN)) return null;
+        return Date.UTC(parts[0], parts[1] - 1, parts[2]);
+      };
+
+      let streak = 1;
+      let totalStreakDays = 1;
       if (data.lastDate) {
-        const last = new Date(data.lastDate);
-        const curr = new Date(today);
-        const diffDays = Math.round((curr - last) / (1000 * 60 * 60 * 24));
+        const lastMs = toUtcDayMs(data.lastDate);
+        const currMs = toUtcDayMs(today);
+        const diffDays = (lastMs !== null && currMs !== null)
+          ? Math.round((currMs - lastMs) / (1000 * 60 * 60 * 24))
+          : 0;
         if (diffDays === 1) {
-          streak = (streak % 7) + 1;
-        } else {
-          streak = 1; // Reset streak if missed day
+          streak = ((data.streak || 0) % 7) + 1;
+          totalStreakDays = (data.totalStreakDays || 0) + 1;
         }
-      } else {
-        streak = 1;
       }
 
       data.lastDate = today;
       data.streak = streak;
-      // If cycle resets or new day, keep track
+      data.totalStreakDays = totalStreakDays;
+      data.longestStreak = Math.max(data.longestStreak || 0, totalStreakDays);
       setItem(KEYS.DAILY_LOGIN, data);
-      return { isNewDay: true, streak, claimedDays: data.claimedDays || [] };
+
+      return {
+        isNewDay: true,
+        streak,
+        totalStreakDays: data.totalStreakDays,
+        longestStreak: data.longestStreak,
+        completed7DayCount: data.completed7DayCount || 0,
+        claimedDays: data.claimedDays || []
+      };
     },
 
     claimDailyLoginReward(dayNum, coinReward) {
       const data = this.getDailyLogin();
       if (!data.claimedDays) data.claimedDays = [];
-      const today = new Date().toISOString().slice(0, 10);
+      const today = this.getTodayDateStr();
       const claimKey = `${today}_day${dayNum}`;
       if (!data.claimedDays.includes(claimKey)) {
         data.claimedDays.push(claimKey);
+        if (data.claimedDays.length > 30) {
+          data.claimedDays = data.claimedDays.slice(-30);
+        }
+        if (dayNum === 7) {
+          data.completed7DayCount = (data.completed7DayCount || 0) + 1;
+          this.unlockAchievement('streak_7');
+        }
         setItem(KEYS.DAILY_LOGIN, data);
         this.addCoins(coinReward);
         return true;
@@ -508,7 +551,7 @@ const Storage = (() => {
     },
 
     getDailyMissions() {
-      const today = new Date().toISOString().slice(0, 10);
+      const today = this.getTodayDateStr();
       const saved = getItem(KEYS.DAILY_MISSIONS, null);
       if (saved && saved.date === today) {
         return saved;

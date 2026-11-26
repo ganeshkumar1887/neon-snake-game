@@ -16,42 +16,77 @@ const DailySystem = (() => {
   ];
 
   return {
+    init() {
+      if (typeof Storage !== 'undefined' && Storage.recordDailyLogin) {
+        return Storage.recordDailyLogin();
+      }
+      return { isNewDay: false, streak: 1, totalStreakDays: 1, longestStreak: 1, completed7DayCount: 0, claimedDays: [] };
+    },
+
     getStreakRewards() {
       return STREAK_REWARDS;
     },
 
     getStreakInfo() {
-      if (typeof Storage === 'undefined') return { streak: 1, isClaimedToday: false };
+      if (typeof Storage === 'undefined') {
+        return { streak: 1, isClaimedToday: false, totalStreakDays: 1, longestStreak: 1, completed7DayCount: 0 };
+      }
       const data = Storage.getDailyLogin();
-      const today = new Date().toISOString().slice(0, 10);
-      const claimKey = `${today}_day${data.streak || 1}`;
+      const streak = Math.max(1, Math.min(7, data.streak || 1));
+      const today = Storage.getTodayDateStr ? Storage.getTodayDateStr() : new Date().toISOString().slice(0, 10);
+      const claimKey = `${today}_day${streak}`;
       const isClaimedToday = data.claimedDays ? data.claimedDays.includes(claimKey) : false;
 
       return {
-        streak: Math.max(1, Math.min(7, data.streak || 1)),
+        streak,
         isClaimedToday,
-        lastDate: data.lastDate
+        lastDate: data.lastDate,
+        totalStreakDays: data.totalStreakDays || streak,
+        longestStreak: data.longestStreak || streak,
+        completed7DayCount: data.completed7DayCount || 0
       };
     },
 
     claimTodayStreak() {
-      if (typeof Storage === 'undefined') return 0;
+      if (typeof Storage === 'undefined') return null;
       const info = this.getStreakInfo();
-      if (info.isClaimedToday) return 0;
+      if (info.isClaimedToday) return null;
 
       const reward = STREAK_REWARDS[info.streak - 1] || STREAK_REWARDS[0];
       const success = Storage.claimDailyLoginReward(info.streak, reward.coins);
       if (success) {
-        if (typeof SoundEngine !== 'undefined') {
+        let totalCoins = reward.coins;
+        let crownUnlocked = false;
+        let expEarned = 0;
+
+        // 7-Day Grand Streak Reward!
+        if (info.streak === 7) {
+          expEarned = 250;
+          Storage.addEvolutionExp(expEarned);
+          crownUnlocked = Storage.unlockFashionItem('hat_crown');
+          if (!crownUnlocked) {
+            // Player already owns Royal Crown -> award 200 bonus coins instead
+            Storage.addCoins(200);
+            totalCoins += 200;
+          } else {
+            Storage.setEquippedHat('hat_crown');
+          }
+          if (typeof SoundEngine !== 'undefined') {
+            SoundEngine.playEvolution();
+          }
+        } else if (typeof SoundEngine !== 'undefined') {
           SoundEngine.playCoin();
         }
-        // If Day 7, also unlock royal crown!
-        if (info.streak === 7) {
-          Storage.unlockFashionItem('hat_crown');
-        }
-        return reward.coins;
+
+        return {
+          coins: totalCoins,
+          day: info.streak,
+          isDay7Grand: info.streak === 7,
+          crownUnlocked,
+          expEarned
+        };
       }
-      return 0;
+      return null;
     },
 
     getMissions() {

@@ -863,15 +863,28 @@
   }
 
   .daily-streak-grid {
-    gap: 3px;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 5px;
   }
 
   .streak-day-card {
-    padding: 0.35rem 0.1rem;
+    padding: 0.45rem 0.2rem;
+  }
+
+  .streak-day-card.day-7 {
+    grid-column: span 2;
   }
 
   .streak-day-label {
-    font-size: 0.58rem;
+    font-size: 0.62rem;
+  }
+
+  .header-streak-pill {
+    padding: 0.22rem 0.45rem;
+  }
+
+  .streak-val-text {
+    font-size: 0.72rem;
   }
 
   .streak-day-coin {

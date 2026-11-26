@@ -13,8 +13,8 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700;800&family=Plus+Jakarta+Sans:wght@500;600;700;800&family=Fredoka:wght@500;600;700&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
 
-  <link rel="stylesheet" href="css/style.css?v=11.3">
-  <link rel="stylesheet" href="css/responsive.css?v=11.3">
+  <link rel="stylesheet" href="css/style.css?v=11.5">
+  <link rel="stylesheet" href="css/responsive.css?v=11.5">
 </head>
 <body>
   <!-- Ambient Soft Pastel Background Floating Blobs -->
@@ -130,6 +130,12 @@
 
             <!-- Player Profile & Settings -->
             <div class="header-actions">
+              <!-- 7-Day Streak Pill -->
+              <div class="header-streak-pill" id="btn-header-streak" title="7-Day Streak Rewards" onclick="UI.openDailyModal()" role="button" tabindex="0">
+                <span class="streak-flame-icon" aria-hidden="true">🔥</span>
+                <span id="header-streak-val" class="streak-val-text">1/7</span>
+              </div>
+
               <!-- Coins Counter Pill -->
               <div class="header-coins-pill" id="btn-header-coins" title="Daily Rewards & Missions" onclick="UI.openDailyModal()" role="button" tabindex="0">
                 <span class="coin-icon-svg" aria-hidden="true">
@@ -178,6 +184,22 @@
             <svg class="play-icon" viewBox="0 0 24 24"><polygon fill="currentColor" points="8,5 19,12 8,19"/></svg>
             <span class="play-btn-text">PLAY GAME</span>
           </button>
+        </div>
+
+        <!-- 7-Day Streak Progress & Grand Reward Card -->
+        <div class="home-streak-banner" id="home-streak-banner" onclick="UI.openDailyModal()" role="button" tabindex="0">
+          <div class="streak-banner-top">
+            <div class="streak-title-wrap">
+              <span class="streak-badge-fire">🔥 <strong id="home-streak-count">1/7</strong> DAY STREAK</span>
+              <span class="streak-grand-hint">Day 7 Reward: 🪙 500 + 👑 Crown</span>
+            </div>
+            <button type="button" id="btn-home-streak-action" class="btn-streak-claim-mini" onclick="event.stopPropagation(); UI.handleHomeStreakAction();">
+              CLAIM
+            </button>
+          </div>
+          <div class="home-streak-dots" id="home-streak-dots" aria-label="7-Day Streak Progress">
+            <!-- Populated dynamically by UI.updateStreakDisplay -->
+          </div>
         </div>
 
         <!-- 6 Distinct Colorful Cards Grid -->
@@ -1092,7 +1114,15 @@
         <div class="modal-body">
           <!-- 7-Day Login Streak Row -->
           <div class="daily-streak-section">
-            <h3 class="section-title">7-DAY LOGIN STREAK</h3>
+            <div class="streak-modal-top-row">
+              <h3 class="section-title">7-DAY LOGIN STREAK</h3>
+              <div id="streak-stats-summary" class="streak-stats-summary">
+                <!-- Populated dynamically by UI.openDailyModal -->
+              </div>
+            </div>
+            <div class="streak-grand-callout">
+              <span>👑 <strong>7-Day Streak Jackpot:</strong> 🪙 500 Coins + Royal Crown Hat + ⚡ 250 XP!</span>
+            </div>
             <div class="daily-streak-grid" id="daily-streak-grid">
               <!-- Populated dynamically by UI.openDailyModal -->
             </div>
@@ -1171,7 +1201,7 @@
   </div> <!-- /app-container -->
 
   <!-- JavaScript Modules in proper dependency order -->
-  <script src="js/storage.js?v=10.0"></script>
+  <script src="js/storage.js?v=11.5"></script>
   <script src="js/themes.js?v=10.0"></script>
   <script src="js/modes.js?v=10.0"></script>
   <script src="js/obstacles.js?v=10.0"></script>
@@ -1182,10 +1212,10 @@
   <script src="js/weather.js?v=10.0"></script>
   <script src="js/fashion.js?v=10.0"></script>
   <script src="js/evolution.js?v=10.0"></script>
-  <script src="js/daily.js?v=10.0"></script>
+  <script src="js/daily.js?v=11.5"></script>
   <script src="js/adventure.js?v=10.0"></script>
   <script src="js/snake.js?v=11.2"></script>
-  <script src="js/ui.js?v=11.2"></script>
+  <script src="js/ui.js?v=11.5"></script>
   <script src="js/game.js?v=11.2"></script>
 </body>
 </html>
