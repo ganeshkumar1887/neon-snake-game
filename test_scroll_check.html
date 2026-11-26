@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html>
+<body>
+<iframe id="gameFrame" src="index.html" style="width:390px;height:844px;border:none;"></iframe>
+<script>
+window.addEventListener('load', async () => {
+    const frame = document.getElementById('gameFrame');
+    const fDoc = frame.contentDocument;
+    const fWin = frame.contentWindow;
+    
+    // Wait for frame to initialize
+    await new Promise(r => setTimeout(r, 1000));
+    
+    console.log("LOG: Frame loaded");
+    const loadingScreen = fDoc.getElementById('screen-loading');
+    if (loadingScreen) {
+        console.log("LOG: Loading screen classes:", loadingScreen.className);
+        // Click skip if present
+        const btnSkip = fDoc.getElementById('btn-skip-loading');
+        if (btnSkip) btnSkip.click();
+    }
+    
+    await new Promise(r => setTimeout(r, 1000));
+    
+    const docEl = fDoc.documentElement;
+    const body = fDoc.body;
+    const scrollingEl = fDoc.scrollingElement;
+    
+    const info = {
+        innerHeight: fWin.innerHeight,
+        htmlScrollHeight: docEl.scrollHeight,
+        htmlClientHeight: docEl.clientHeight,
+        bodyScrollHeight: body.scrollHeight,
+        bodyClientHeight: body.clientHeight,
+        scrollingElementTag: scrollingEl ? scrollingEl.tagName : null,
+        scrollingElementScrollHeight: scrollingEl ? scrollingEl.scrollHeight : null,
+        initialScrollY: fWin.scrollY
+    };
+    
+    // Try scrolling window
+    fWin.scrollTo(0, 400);
+    info.afterScrollY = fWin.scrollY;
+    
+    // Try scrolling html
+    docEl.scrollTop = 400;
+    info.docElScrollTop = docEl.scrollTop;
+    
+    // Try scrolling body
+    body.scrollTop = 400;
+    info.bodyScrollTop = body.scrollTop;
+    
+    // Check computed styles
+    const csHtml = fWin.getComputedStyle(docEl);
+    const csBody = fWin.getComputedStyle(body);
+    info.htmlOverflowY = csHtml.overflowY;
+    info.htmlHeight = csHtml.height;
+    info.bodyOverflowY = csBody.overflowY;
+    info.bodyHeight = csBody.height;
+    info.bodyPosition = csBody.position;
+    
+    console.log("RESULT:" + JSON.stringify(info));
+});
+</script>
+</body>
+</html>

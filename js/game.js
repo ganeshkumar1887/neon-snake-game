@@ -166,8 +166,8 @@ const Game = (() => {
       void container.offsetWidth; // Force layout reflow
     }
     const rect = container ? container.getBoundingClientRect() : null;
-    let width = rect ? Math.floor(rect.width) : (container ? container.clientWidth : 0);
-    let height = rect ? Math.floor(rect.height) : (container ? container.clientHeight : 0);
+    let width = (container && container.clientWidth > 0) ? container.clientWidth : (rect ? Math.floor(rect.width) : 0);
+    let height = (container && container.clientHeight > 0) ? container.clientHeight : (rect ? Math.floor(rect.height) : 0);
 
     // Fallback if dimensions are not yet available
     if (width <= 0) {
