@@ -503,19 +503,20 @@
     font-size: 0.68rem;
   }
 
-  /* Mobile Gameplay Screen: Relative scrolling layout with larger board and buttons */
+  /* Mobile Gameplay Screen: Larger attractive board and D-Pad slightly lower */
   .screen-game.active {
     position: relative;
     width: 100%;
-    min-height: 100%;
+    min-height: 100vh;
+    min-height: 100dvh;
     height: auto;
-    padding: 0.4rem 0.45rem max(3.5rem, calc(env(safe-area-inset-bottom, 0px) + 2rem));
+    padding: 0.45rem 0.35rem max(0.85rem, env(safe-area-inset-bottom, 0px));
     box-sizing: border-box;
     display: flex !important;
     flex-direction: column;
     justify-content: flex-start;
     align-items: center;
-    gap: 0.6rem;
+    gap: 0.5rem;
     overflow: visible !important;
     touch-action: pan-y;
     z-index: 20;
@@ -524,10 +525,10 @@
 
   .game-hud {
     width: 100%;
-    max-width: min(95vw, 460px);
+    max-width: min(97vw, 480px);
     padding: 0.5rem 0.75rem;
     border-radius: 18px;
-    margin-bottom: 0.1rem;
+    margin-bottom: 0;
     gap: 0.25rem;
   }
 
@@ -555,24 +556,25 @@
     height: 19px;
   }
 
-  /* Game Board: Larger responsive square filling mobile width */
+  /* Game Board: Larger, taller & attractive frame on mobile portrait */
   .game-board-container {
-    width: 100%;
-    max-width: min(95vw, 54dvh, 460px);
-    aspect-ratio: 1 / 1;
-    border-radius: 22px;
-    border-width: 2.5px;
+    width: min(97vw, calc(56dvh * 25 / 29), 480px);
+    max-width: 100%;
+    aspect-ratio: 25 / 29;
+    border-radius: 24px;
+    border-width: 3.5px;
     margin: 0 auto;
     flex-shrink: 0;
   }
 
-  /* Mobile D-Pad Touch Controller: Larger, thumb-friendly gaming buttons */
+  /* Mobile D-Pad Touch Controller: Positioned slightly lower in the bottom thumb zone */
   .mobile-controls {
     display: block !important;
     width: 100%;
     max-width: 360px;
-    margin: 0.4rem auto 0.5rem;
-    padding-bottom: 0.25rem;
+    margin: auto auto 0.25rem;
+    padding-top: 0.55rem;
+    padding-bottom: max(0.45rem, env(safe-area-inset-bottom, 0px));
     flex-shrink: 0;
   }
 

@@ -20,7 +20,8 @@ const Game = (() => {
   // Canvas & Render Setup
   let canvas = null;
   let ctx = null;
-  const GRID_SIZE = 25; // 25x25 grid
+  const GRID_SIZE = 25; // 25 columns
+  let gridRows = 25; // Dynamic rows (25 on square, up to 30 on tall mobile screens)
   let cellSize = 24;
   let canvasDpr = 1;
   let logicalWidth = 600;
@@ -156,7 +157,7 @@ const Game = (() => {
   };
 
   // Initialize Canvas with proper device pixel ratio & dynamic viewport scaling
-  const setupCanvas = () => {
+  const setupCanvas = (updateRows = false) => {
     canvas = document.getElementById('game-canvas');
     if (!canvas) return;
     ctx = canvas.getContext('2d');
@@ -171,16 +172,26 @@ const Game = (() => {
 
     // Fallback if dimensions are not yet available
     if (width <= 0) {
-      width = Math.min(window.innerWidth - 24, Math.floor(window.innerHeight * 0.65), 760);
+      width = Math.min(window.innerWidth - 20, Math.floor(window.innerHeight * 0.65), 760);
     }
     if (height <= 0) {
       height = width;
     }
 
-    // Maintain 1:1 aspect ratio
-    const squareSize = Math.floor(Math.min(width, height));
-    width = Math.max(180, squareSize);
-    height = width;
+    if (updateRows) {
+      if (height > width * 1.04) {
+        gridRows = Math.max(GRID_SIZE, Math.min(30, Math.round((height / width) * GRID_SIZE)));
+      } else {
+        gridRows = GRID_SIZE;
+      }
+      if (snake) snake.gridRows = gridRows;
+      if (foodManager) foodManager.gridRows = gridRows;
+    }
+
+    // Maintain square grid cells matching GRID_SIZE x gridRows
+    const nextCell = Math.max(7, Math.min(width / GRID_SIZE, height / gridRows));
+    width = Math.max(180, Math.floor(nextCell * GRID_SIZE));
+    height = Math.max(180, Math.floor(nextCell * gridRows));
 
     // Cap DPR at 2 to prevent excessive pixel fill on 3x/4x mobile WebViews
     canvasDpr = Math.min(window.devicePixelRatio || 1, 2);
@@ -195,7 +206,7 @@ const Game = (() => {
     cellSize = width / GRID_SIZE;
   };
 
-  // Draw cyber background grid
+  // Draw attractive checkerboard & cyber background grid
   const drawBackground = () => {
     const width = logicalWidth;
     const height = logicalHeight;
@@ -212,10 +223,22 @@ const Game = (() => {
     ctx.fillStyle = bgFill;
     ctx.fillRect(0, 0, width, height);
 
-    // Subtle Grid Lines (batched into a single path for mobile WebView performance)
+    // Subtle pastel checkerboard tiles (single batched fill for fast WebView rendering)
     if (settings.showGrid !== false) {
-      ctx.strokeStyle = pal.gridLine || 'rgba(191, 165, 255, 0.12)';
-      ctx.lineWidth = 1;
+      ctx.fillStyle = pal.gridLine || 'rgba(191, 165, 255, 0.1)';
+      ctx.beginPath();
+      for (let gx = 0; gx < GRID_SIZE; gx++) {
+        for (let gy = 0; gy < gridRows; gy++) {
+          if ((gx + gy) % 2 === 1) {
+            ctx.rect(gx * cellSize, gy * cellSize, cellSize, cellSize);
+          }
+        }
+      }
+      ctx.fill();
+
+      // Subtle Grid Lines (batched into a single path)
+      ctx.strokeStyle = pal.gridLine || 'rgba(191, 165, 255, 0.14)';
+      ctx.lineWidth = 0.75;
       ctx.beginPath();
 
       for (let x = 0; x <= width; x += cellSize) {
@@ -230,10 +253,10 @@ const Game = (() => {
       ctx.stroke();
     }
 
-    // Outer soft border
-    ctx.strokeStyle = pal.obstacleBorder ? `${pal.obstacleBorder}88` : 'rgba(191, 165, 255, 0.4)';
-    ctx.lineWidth = 2;
-    ctx.strokeRect(1, 1, width - 2, height - 2);
+    // Crisp inner arena accent frame
+    ctx.strokeStyle = pal.obstacleBorder ? `${pal.obstacleBorder}AA` : 'rgba(167, 139, 250, 0.5)';
+    ctx.lineWidth = 2.5;
+    ctx.strokeRect(1.5, 1.5, width - 3, height - 3);
   };
 
   // Check achievements after gameplay events
@@ -627,7 +650,7 @@ const Game = (() => {
         if (typeof PowerUpManager !== 'undefined') {
           const head = snake.segments[0];
           const obstacleCells = (currentMode && currentMode.hasObstacles) ? ObstaclesManager.getObstacleCells() : [];
-          PowerUpManager.update(deltaTime, head, foodManager, snake.segments, obstacleCells, GRID_SIZE, GRID_SIZE);
+          PowerUpManager.update(deltaTime, head, foodManager, snake.segments, obstacleCells, GRID_SIZE, gridRows);
           if (UI.updatePowerUpBar) {
             UI.updatePowerUpBar(PowerUpManager.getActiveEffects());
           }
@@ -937,9 +960,23 @@ const Game = (() => {
         ObstaclesManager.setLevel(1);
       }
 
+      UI.setupHUDForMode(currentMode);
+      UI.updateHUD(score, level, getSpeedMultiplier());
+      UI.updateBonusBar(0, 1);
+      UI.hideGameOver();
+      UI.showPause(false);
+      UI.hideLevelClear();
+      UI.showScreen('game');
+
+      setupCanvas(true);
+
+      snake.gridCols = GRID_SIZE;
+      snake.gridRows = gridRows;
       snake.reset();
       snake.setWrapWalls(currentMode.wrapWalls);
 
+      foodManager.gridCols = GRID_SIZE;
+      foodManager.gridRows = gridRows;
       foodManager.reset();
       const obstacleCells = (currentMode.hasObstacles && !currentMode.isAdventure) 
         ? ObstaclesManager.getObstacleCells() 
@@ -947,7 +984,7 @@ const Game = (() => {
       foodManager.spawnFood(snake.segments, obstacleCells, currentMode.bonusFrequency);
 
       if (currentMode.isAdventure && typeof AdventureWorld !== 'undefined') {
-        AdventureWorld.setupRescueMission(GRID_SIZE, GRID_SIZE, snake.segments, obstacleCells);
+        AdventureWorld.setupRescueMission(GRID_SIZE, gridRows, snake.segments, obstacleCells);
       }
 
       // Initialize Power-Ups, Ghost Rival, Weather & Daily tracking
@@ -960,16 +997,6 @@ const Game = (() => {
         WeatherEngine.init(env);
       }
       if (typeof DailySystem !== 'undefined') DailySystem.recordEvent('game', 1);
-
-      UI.setupHUDForMode(currentMode);
-      UI.updateHUD(score, level, getSpeedMultiplier());
-      UI.updateBonusBar(0, 1);
-      UI.hideGameOver();
-      UI.showPause(false);
-      UI.hideLevelClear();
-      UI.showScreen('game');
-
-      setupCanvas();
 
       currentState = STATES.COUNTDOWN;
       startLoop();
