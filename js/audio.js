@@ -22,27 +22,33 @@ const SoundEngine = (() => {
 
   // Initialize Audio Context on first user interaction
   const initContext = () => {
-    if (!ctx) {
-      const AudioCtx = window.AudioContext || window.webkitAudioContext;
-      if (!AudioCtx) return;
-      ctx = new AudioCtx();
+    try {
+      if (!ctx) {
+        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+        if (!AudioCtx) return;
+        ctx = new AudioCtx();
 
-      masterGain = ctx.createGain();
-      masterGain.gain.value = isSoundEnabled ? masterVolume : 0;
-      masterGain.connect(ctx.destination);
+        masterGain = ctx.createGain();
+        masterGain.gain.value = isSoundEnabled ? masterVolume : 0;
+        masterGain.connect(ctx.destination);
 
-      sfxGain = ctx.createGain();
-      sfxGain.gain.value = isSfxEnabled ? 0.9 : 0;
-      sfxGain.connect(masterGain);
+        sfxGain = ctx.createGain();
+        sfxGain.gain.value = isSfxEnabled ? 0.9 : 0;
+        sfxGain.connect(masterGain);
 
-      bgmGain = ctx.createGain();
-      bgmGain.gain.value = isBgmEnabled ? 0.22 : 0;
-      bgmGain.connect(masterGain);
-    }
+        bgmGain = ctx.createGain();
+        bgmGain.gain.value = isBgmEnabled ? 0.22 : 0;
+        bgmGain.connect(masterGain);
+      }
 
-    if (ctx && ctx.state === 'suspended') {
-      ctx.resume().catch(() => {});
-    }
+      if (ctx && ctx.state === 'suspended' && !document.hidden) {
+        ctx.resume().catch(() => {});
+      }
+    } catch (e) {}
+  };
+
+  const canPlayAudio = () => {
+    return !!(ctx && ctx.state === 'running' && !document.hidden);
   };
 
   return {
@@ -63,6 +69,18 @@ const SoundEngine = (() => {
       window.addEventListener('click', unlockAudio, { once: true });
       window.addEventListener('keydown', unlockAudio, { once: true });
       window.addEventListener('touchstart', unlockAudio, { once: true });
+
+      document.addEventListener('visibilitychange', () => {
+        if (!ctx) return;
+        if (document.hidden) {
+          this.stopBGM();
+          if (ctx.state === 'running') {
+            ctx.suspend().catch(() => {});
+          }
+        } else if (ctx.state === 'suspended') {
+          ctx.resume().catch(() => {});
+        }
+      });
     },
 
     setSoundEnabled(enabled) {
@@ -534,7 +552,7 @@ const SoundEngine = (() => {
 
     // 15. Synthwave Ambient BGM Generator
     startBGM() {
-      if (!isSoundEnabled || !isBgmEnabled || isBgmPlaying) return;
+      if (!isSoundEnabled || !isBgmEnabled || isBgmPlaying || document.hidden) return;
       initContext();
       if (!ctx) return;
 
@@ -551,51 +569,77 @@ const SoundEngine = (() => {
         440.00, 349.23, 587.33, 440.00
       ];
 
+      if (bgmInterval) {
+        clearInterval(bgmInterval);
+        bgmInterval = null;
+      }
+
       bgmInterval = setInterval(() => {
-        if (!isBgmPlaying || !ctx || !isSoundEnabled || !isBgmEnabled) return;
-
-        const now = ctx.currentTime;
-
-        // Bass pulse
-        const bassOsc = ctx.createOscillator();
-        const bassGain = ctx.createGain();
-        const filter = ctx.createBiquadFilter();
-
-        bassOsc.type = 'sawtooth';
-        bassOsc.frequency.setValueAtTime(bassline[bgmStep % bassline.length], now);
-
-        filter.type = 'lowpass';
-        filter.frequency.setValueAtTime(450, now);
-
-        bassGain.gain.setValueAtTime(0.25, now);
-        bassGain.gain.exponentialRampToValueAtTime(0.001, now + 0.16);
-
-        bassOsc.connect(filter);
-        filter.connect(bassGain);
-        bassGain.connect(bgmGain);
-
-        bassOsc.start(now);
-        bassOsc.stop(now + 0.16);
-
-        // Soft arp
-        if (bgmStep % 2 === 0) {
-          const arpOsc = ctx.createOscillator();
-          const arpGain = ctx.createGain();
-
-          arpOsc.type = 'sine';
-          arpOsc.frequency.setValueAtTime(arpNotes[Math.floor(bgmStep / 2) % arpNotes.length], now);
-
-          arpGain.gain.setValueAtTime(0.12, now);
-          arpGain.gain.exponentialRampToValueAtTime(0.001, now + 0.25);
-
-          arpOsc.connect(arpGain);
-          arpGain.connect(bgmGain);
-
-          arpOsc.start(now);
-          arpOsc.stop(now + 0.25);
+        if (!isBgmPlaying || !ctx || !isSoundEnabled || !isBgmEnabled || document.hidden) return;
+        if (!canPlayAudio()) {
+          if (ctx.state === 'suspended') ctx.resume().catch(() => {});
+          return;
         }
 
-        bgmStep++;
+        try {
+          const now = ctx.currentTime;
+
+          // Bass pulse
+          const bassOsc = ctx.createOscillator();
+          const bassGain = ctx.createGain();
+          const filter = ctx.createBiquadFilter();
+
+          bassOsc.type = 'sawtooth';
+          bassOsc.frequency.setValueAtTime(bassline[bgmStep % bassline.length], now);
+
+          filter.type = 'lowpass';
+          filter.frequency.setValueAtTime(450, now);
+
+          bassGain.gain.setValueAtTime(0.25, now);
+          bassGain.gain.exponentialRampToValueAtTime(0.001, now + 0.16);
+
+          bassOsc.connect(filter);
+          filter.connect(bassGain);
+          bassGain.connect(bgmGain);
+
+          bassOsc.onended = () => {
+            try {
+              bassOsc.disconnect();
+              filter.disconnect();
+              bassGain.disconnect();
+            } catch (_) {}
+          };
+
+          bassOsc.start(now);
+          bassOsc.stop(now + 0.16);
+
+          // Soft arp
+          if (bgmStep % 2 === 0) {
+            const arpOsc = ctx.createOscillator();
+            const arpGain = ctx.createGain();
+
+            arpOsc.type = 'sine';
+            arpOsc.frequency.setValueAtTime(arpNotes[Math.floor(bgmStep / 2) % arpNotes.length], now);
+
+            arpGain.gain.setValueAtTime(0.12, now);
+            arpGain.gain.exponentialRampToValueAtTime(0.001, now + 0.25);
+
+            arpOsc.connect(arpGain);
+            arpGain.connect(bgmGain);
+
+            arpOsc.onended = () => {
+              try {
+                arpOsc.disconnect();
+                arpGain.disconnect();
+              } catch (_) {}
+            };
+
+            arpOsc.start(now);
+            arpOsc.stop(now + 0.25);
+          }
+
+          bgmStep++;
+        } catch (_) {}
       }, 160);
     },
 

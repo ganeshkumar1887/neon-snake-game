@@ -22,6 +22,9 @@ const Game = (() => {
   let ctx = null;
   const GRID_SIZE = 25; // 25x25 grid
   let cellSize = 24;
+  let canvasDpr = 1;
+  let logicalWidth = 600;
+  let logicalHeight = 600;
 
   // Game Objects
   let snake = null;
@@ -80,15 +83,12 @@ const Game = (() => {
 
     draw(context) {
       if (this.life <= 0) return;
-      context.save();
       context.globalAlpha = Math.max(0, this.life / this.maxLife);
-      context.shadowColor = this.color;
-      context.shadowBlur = 8;
       context.fillStyle = this.color;
       context.beginPath();
       context.arc(this.x, this.y, this.size, 0, Math.PI * 2);
       context.fill();
-      context.restore();
+      context.globalAlpha = 1;
     }
   }
 
@@ -132,7 +132,7 @@ const Game = (() => {
 
     const px = gridX * cellSize + cellSize / 2;
     const py = gridY * cellSize + cellSize / 2;
-    for (let i = 0; i < count; i++) {
+    for (let i = 0; i < count && particles.length < 80; i++) {
       particles.push(new Particle(px, py, color, 4.5, 3.5, 1.0));
     }
   };
@@ -148,7 +148,7 @@ const Game = (() => {
     segments.slice(0, 10).forEach((seg) => {
       const px = seg.x * cellSize + cellSize / 2;
       const py = seg.y * cellSize + cellSize / 2;
-      for (let i = 0; i < 5; i++) {
+      for (let i = 0; i < 5 && particles.length < 80; i++) {
         const color = colors[Math.floor(Math.random() * colors.length)];
         particles.push(new Particle(px, py, color, 6.0, 4.0, 1.2));
       }
@@ -182,20 +182,23 @@ const Game = (() => {
     width = Math.max(180, squareSize);
     height = width;
 
-    const dpr = window.devicePixelRatio || 1;
-    canvas.width = Math.floor(width * dpr);
-    canvas.height = Math.floor(height * dpr);
+    // Cap DPR at 2 to prevent excessive pixel fill on 3x/4x mobile WebViews
+    canvasDpr = Math.min(window.devicePixelRatio || 1, 2);
+    logicalWidth = width;
+    logicalHeight = height;
+    canvas.width = Math.floor(width * canvasDpr);
+    canvas.height = Math.floor(height * canvasDpr);
     canvas.style.width = `${width}px`;
     canvas.style.height = `${height}px`;
 
-    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.setTransform(canvasDpr, 0, 0, canvasDpr, 0, 0);
     cellSize = width / GRID_SIZE;
   };
 
   // Draw cyber background grid
   const drawBackground = () => {
-    const width = canvas.width / (window.devicePixelRatio || 1);
-    const height = canvas.height / (window.devicePixelRatio || 1);
+    const width = logicalWidth;
+    const height = logicalHeight;
     const pal = Themes.getPalette();
     const settings = Storage.getSettings();
 
@@ -209,24 +212,22 @@ const Game = (() => {
     ctx.fillStyle = bgFill;
     ctx.fillRect(0, 0, width, height);
 
-    // Subtle Grid Lines
+    // Subtle Grid Lines (batched into a single path for mobile WebView performance)
     if (settings.showGrid !== false) {
       ctx.strokeStyle = pal.gridLine || 'rgba(191, 165, 255, 0.12)';
       ctx.lineWidth = 1;
+      ctx.beginPath();
 
       for (let x = 0; x <= width; x += cellSize) {
-        ctx.beginPath();
         ctx.moveTo(x, 0);
         ctx.lineTo(x, height);
-        ctx.stroke();
       }
 
       for (let y = 0; y <= height; y += cellSize) {
-        ctx.beginPath();
         ctx.moveTo(0, y);
         ctx.lineTo(width, y);
-        ctx.stroke();
       }
+      ctx.stroke();
     }
 
     // Outer soft border
@@ -540,10 +541,36 @@ const Game = (() => {
     }, 450);
   };
 
+  const stopLoop = () => {
+    if (animationFrameId) {
+      cancelAnimationFrame(animationFrameId);
+      animationFrameId = null;
+    }
+  };
+
+  const startLoop = () => {
+    if (!animationFrameId) {
+      lastFrameTime = performance.now();
+      animationFrameId = requestAnimationFrame(gameLoop);
+    }
+  };
+
+  const shouldKeepLooping = () => {
+    return (
+      currentState === STATES.PLAYING ||
+      currentState === STATES.COUNTDOWN ||
+      currentState === STATES.LEVEL_TRANSITION ||
+      (currentState === STATES.GAMEOVER && particles.length > 0)
+    );
+  };
+
   // Main animation / render loop
   const gameLoop = (timestamp) => {
+    animationFrameId = null;
     if (!lastFrameTime) lastFrameTime = timestamp;
-    const deltaTime = timestamp - lastFrameTime;
+    // Clamp deltaTime to max 100ms so pauses/backgrounding never cause catch-up freezes
+    const rawDelta = timestamp - lastFrameTime;
+    const deltaTime = Math.min(Math.max(0, rawDelta), 100);
     lastFrameTime = timestamp;
 
     let moveProgress = 1;
@@ -568,116 +595,131 @@ const Game = (() => {
 
         if (timeRemaining <= 0) {
           handleGameOver('timeout');
-          return;
         }
       }
 
-      const tickInterval = getTickInterval();
-      while (tickAccumulator >= tickInterval) {
-        step();
-        tickAccumulator -= tickInterval;
+      if (currentState === STATES.PLAYING) {
+        const tickInterval = getTickInterval();
+        let stepsThisFrame = 0;
+        while (currentState === STATES.PLAYING && tickAccumulator >= tickInterval && stepsThisFrame < 3) {
+          step();
+          tickAccumulator -= tickInterval;
+          stepsThisFrame++;
+        }
+        if (stepsThisFrame >= 3 || currentState !== STATES.PLAYING) {
+          tickAccumulator = 0;
+        }
+
+        // Smooth fractional progress (0.0 to 1.0) between ticks for 60 FPS interpolation
+        moveProgress = Math.min(1, Math.max(0, tickAccumulator / tickInterval));
       }
 
-      // Smooth fractional progress (0.0 to 1.0) between ticks for 60 FPS interpolation
-      moveProgress = Math.min(1, Math.max(0, tickAccumulator / tickInterval));
+      if (currentState === STATES.PLAYING) {
+        // Update Food Manager (bonus timers)
+        foodManager.update(deltaTime);
+        if (foodManager.bonusFood) {
+          UI.updateBonusBar(foodManager.bonusFood.remaining, foodManager.bonusFood.maxTime);
+        } else {
+          UI.updateBonusBar(0, 1);
+        }
 
-      // Update Food Manager (bonus timers)
-      foodManager.update(deltaTime);
-      if (foodManager.bonusFood) {
-        UI.updateBonusBar(foodManager.bonusFood.remaining, foodManager.bonusFood.maxTime);
-      } else {
-        UI.updateBonusBar(0, 1);
-      }
+        // Update Power-Ups
+        if (typeof PowerUpManager !== 'undefined') {
+          const head = snake.segments[0];
+          const obstacleCells = (currentMode && currentMode.hasObstacles) ? ObstaclesManager.getObstacleCells() : [];
+          PowerUpManager.update(deltaTime, head, foodManager, snake.segments, obstacleCells, GRID_SIZE, GRID_SIZE);
+          if (UI.updatePowerUpBar) {
+            UI.updatePowerUpBar(PowerUpManager.getActiveEffects());
+          }
+        }
 
-      // Update Power-Ups
-      if (typeof PowerUpManager !== 'undefined') {
-        const head = snake.segments[0];
-        const obstacleCells = (currentMode && currentMode.hasObstacles) ? ObstaclesManager.getObstacleCells() : [];
-        PowerUpManager.update(deltaTime, head, foodManager, snake.segments, obstacleCells, GRID_SIZE, GRID_SIZE);
-        if (UI.updatePowerUpBar) {
-          UI.updatePowerUpBar(PowerUpManager.getActiveEffects());
+        // Update Ghost Rival
+        if (typeof GhostRival !== 'undefined') {
+          GhostRival.update(totalElapsedPlayTime, score);
+          if (UI.updateGhostDelta) {
+            UI.updateGhostDelta(GhostRival.getScoreDelta());
+          }
+        }
+
+        // Update Weather Atmosphere
+        if (typeof WeatherEngine !== 'undefined') {
+          WeatherEngine.update(deltaTime, logicalWidth, logicalHeight);
+        }
+
+        // Update Adventure World Survival timer & mission tracking
+        if (currentMode && currentMode.isAdventure && typeof AdventureWorld !== 'undefined') {
+          AdventureWorld.updateSurvivalTime(totalElapsedPlayTime / 1000);
+          if (UI.updateAdventureMissionHUD) {
+            UI.updateAdventureMissionHUD(AdventureWorld.getMissionProgressText(), AdventureWorld.getMissionProgressPercent());
+          }
+          if (AdventureWorld.checkMissionStatus(score)) {
+            handleAdventureLevelClear();
+          }
+        }
+
+        // Periodic check for survival achievements
+        if (currentState === STATES.PLAYING) {
+          checkAchievements();
         }
       }
+    }
 
-      // Update Ghost Rival
-      if (typeof GhostRival !== 'undefined') {
-        GhostRival.update(totalElapsedPlayTime, score);
-        if (UI.updateGhostDelta) {
-          UI.updateGhostDelta(GhostRival.getScoreDelta());
-        }
-      }
+    // Render Scene (skip if hidden on Menu)
+    if (currentState !== STATES.MENU && ctx && canvas) {
+      drawBackground();
 
-      // Update Weather Atmosphere
+      // Dynamic Weather Atmosphere Particles
       if (typeof WeatherEngine !== 'undefined') {
-        WeatherEngine.update(deltaTime, canvas.width / (window.devicePixelRatio || 1), canvas.height / (window.devicePixelRatio || 1));
+        WeatherEngine.draw(ctx, logicalWidth, logicalHeight);
       }
 
-      // Update Adventure World Survival timer & mission tracking
-      if (currentMode && currentMode.isAdventure && typeof AdventureWorld !== 'undefined') {
-        AdventureWorld.updateSurvivalTime(totalElapsedPlayTime / 1000);
-        if (UI.updateAdventureMissionHUD) {
-          UI.updateAdventureMissionHUD(AdventureWorld.getMissionProgressText(), AdventureWorld.getMissionProgressPercent());
-        }
-        if (AdventureWorld.checkMissionStatus(score)) {
-          handleAdventureLevelClear();
-          return;
-        }
+      // Adventure Safe Zone Nest & Baby Snakes
+      if (typeof AdventureWorld !== 'undefined' && currentMode && currentMode.isAdventure) {
+        AdventureWorld.draw(ctx, cellSize);
       }
 
-      // Periodic check for survival achievements
-      checkAchievements();
+      // Ghost Rival Phantom Snake
+      if (typeof GhostRival !== 'undefined') {
+        GhostRival.draw(ctx, cellSize);
+      }
+
+      // Draw Obstacles (if Obstacle mode)
+      if (currentMode && currentMode.hasObstacles) {
+        ObstaclesManager.draw(ctx, cellSize, Themes.getPalette());
+      }
+
+      // Draw Collectible Power-Up Item on Grid
+      if (typeof PowerUpManager !== 'undefined') {
+        PowerUpManager.draw(ctx, cellSize);
+      }
+
+      // Draw Entities
+      if (foodManager) foodManager.draw(ctx, cellSize);
+      if (snake) snake.draw(ctx, cellSize, moveProgress);
+
+      // Update & Draw Particles (runs at 60fps)
+      for (let i = particles.length - 1; i >= 0; i--) {
+        const p = particles[i];
+        p.update();
+        p.draw(ctx);
+        if (p.life <= 0) particles.splice(i, 1);
+      }
     }
 
-    // Render Scene
-    drawBackground();
-
-    const renderW = canvas.width / (window.devicePixelRatio || 1);
-    const renderH = canvas.height / (window.devicePixelRatio || 1);
-
-    // Dynamic Weather Atmosphere Particles
-    if (typeof WeatherEngine !== 'undefined') {
-      WeatherEngine.draw(ctx, renderW, renderH);
+    if (shouldKeepLooping() && !document.hidden) {
+      animationFrameId = requestAnimationFrame(gameLoop);
     }
-
-    // Adventure Safe Zone Nest & Baby Snakes
-    if (typeof AdventureWorld !== 'undefined' && currentMode && currentMode.isAdventure) {
-      AdventureWorld.draw(ctx, cellSize);
-    }
-
-    // Ghost Rival Phantom Snake
-    if (typeof GhostRival !== 'undefined') {
-      GhostRival.draw(ctx, cellSize);
-    }
-
-    // Draw Obstacles (if Obstacle mode)
-    if (currentMode && currentMode.hasObstacles) {
-      ObstaclesManager.draw(ctx, cellSize, Themes.getPalette());
-    }
-
-    // Draw Collectible Power-Up Item on Grid
-    if (typeof PowerUpManager !== 'undefined') {
-      PowerUpManager.draw(ctx, cellSize);
-    }
-
-    // Draw Entities
-    if (foodManager) foodManager.draw(ctx, cellSize);
-    if (snake) snake.draw(ctx, cellSize, moveProgress);
-
-    // Update & Draw Particles (runs at 60fps)
-    for (let i = particles.length - 1; i >= 0; i--) {
-      const p = particles[i];
-      p.update();
-      p.draw(ctx);
-      if (p.life <= 0) particles.splice(i, 1);
-    }
-
-    animationFrameId = requestAnimationFrame(gameLoop);
   };
 
   // Auto-pause when tab/screen is hidden
   document.addEventListener('visibilitychange', () => {
-    if (document.hidden && currentState === STATES.PLAYING) {
-      Game.pause();
+    if (document.hidden) {
+      if (currentState === STATES.PLAYING) {
+        Game.pause();
+      }
+      stopLoop();
+    } else if (shouldKeepLooping()) {
+      startLoop();
     }
   });
 
@@ -793,10 +835,7 @@ const Game = (() => {
       foodManager = new FoodManager(GRID_SIZE, GRID_SIZE);
 
       this.bindUIButtons();
-
-      // Start animation loop
       lastFrameTime = performance.now();
-      animationFrameId = requestAnimationFrame(gameLoop);
     },
 
     bindUIButtons() {
@@ -861,6 +900,9 @@ const Game = (() => {
 
     handleResize() {
       setupCanvas();
+      if (currentState !== STATES.MENU && !animationFrameId && ctx && canvas) {
+        animationFrameId = requestAnimationFrame(gameLoop);
+      }
     },
 
     startNewGame(options = {}) {
@@ -930,9 +972,15 @@ const Game = (() => {
       setupCanvas();
 
       currentState = STATES.COUNTDOWN;
+      startLoop();
+      if (UI.cancelCountdown) UI.cancelCountdown();
       UI.showCountdown(3, () => {
+        if (currentState !== STATES.COUNTDOWN) return;
         currentState = STATES.PLAYING;
+        lastFrameTime = performance.now();
+        tickAccumulator = 0;
         SoundEngine.startBGM();
+        startLoop();
       });
     },
 
@@ -948,10 +996,13 @@ const Game = (() => {
       UI.showPause(false);
       currentState = STATES.PLAYING;
       lastFrameTime = performance.now();
+      tickAccumulator = 0;
       SoundEngine.startBGM();
+      startLoop();
     },
 
     restart() {
+      if (UI.cancelCountdown) UI.cancelCountdown();
       SoundEngine.stopBGM();
       UI.hideGameOver();
       UI.showPause(false);
@@ -960,8 +1011,11 @@ const Game = (() => {
     },
 
     quitToMenu() {
+      if (UI.cancelCountdown) UI.cancelCountdown();
       SoundEngine.stopBGM();
       currentState = STATES.MENU;
+      particles = [];
+      stopLoop();
       UI.hideGameOver();
       UI.showPause(false);
       UI.hideLevelClear();

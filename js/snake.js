@@ -252,21 +252,24 @@ class Snake {
       const bodyRadius = cellSize * rFactor;
 
       ctx.save();
-      // Soft gentle ambient shadow under snake
-      ctx.shadowColor = 'rgba(48, 45, 53, 0.14)';
-      ctx.shadowBlur = 8;
-      ctx.shadowOffsetY = 3;
+      ctx.lineCap = 'round';
+
+      // Soft ambient drop shadow without expensive GPU shadowBlur per segment
+      ctx.strokeStyle = 'rgba(48, 45, 53, 0.12)';
+      ctx.lineWidth = bodyRadius * 2.15;
+      ctx.beginPath();
+      ctx.moveTo(p1.x, p1.y + 3);
+      ctx.lineTo(p2.x, p2.y + 3);
+      ctx.stroke();
 
       ctx.strokeStyle = pal.shade || '#9875E6';
       ctx.lineWidth = bodyRadius * 2;
-      ctx.lineCap = 'round';
       ctx.beginPath();
       ctx.moveTo(p1.x, p1.y);
       ctx.lineTo(p2.x, p2.y);
       ctx.stroke();
 
       // Top dorsal ridge (Main pastel color)
-      ctx.shadowBlur = 0;
       ctx.strokeStyle = pal.body || '#BFA5FF';
       ctx.lineWidth = bodyRadius * 1.5;
       ctx.stroke();
@@ -355,8 +358,6 @@ class Snake {
         ctx.rotate(tailAngle);
 
         ctx.fillStyle = pal.body || '#4ECB23';
-        ctx.shadowColor = 'rgba(22, 101, 52, 0.18)';
-        ctx.shadowBlur = 6;
         ctx.beginPath();
         ctx.moveTo(0, -cellSize * 0.15);
         ctx.lineTo(cellSize * 0.34, 0); // Pointed tip
@@ -435,14 +436,16 @@ class Snake {
 
     // --- B. Cute Rounded Head Shape & Squash/Stretch ---
     ctx.save();
-    // Gentle soft drop shadow
-    ctx.shadowColor = 'rgba(22, 101, 52, 0.22)';
-    ctx.shadowBlur = 10;
-    ctx.shadowOffsetY = 2;
 
     if (isEating) {
       ctx.scale(1.0 + chompScale * 0.16, 1.0 - chompScale * 0.1);
     }
+
+    // Lightweight soft drop shadow under head
+    ctx.fillStyle = 'rgba(22, 101, 52, 0.14)';
+    ctx.beginPath();
+    ctx.ellipse(0, 2.5, headLen * 0.56, headWidth * 0.54, 0, 0, Math.PI * 2);
+    ctx.fill();
 
     ctx.beginPath();
     ctx.moveTo(headLen * 0.62, 0); // Snout tip

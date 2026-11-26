@@ -8,6 +8,18 @@ const UI = (() => {
   const els = {};
 
   let heroAnimationId = null;
+  let countdownTimerId = null;
+  let lastTimerText = '';
+  let lastTimerUrgent = null;
+  let lastBonusVisible = null;
+  let lastBonusPct = -1;
+  let lastPowerUpHtml = '';
+  let lastPowerUpVisible = null;
+  let lastGhostText = '';
+  let lastGhostVisible = null;
+  let lastMissionText = '';
+  let lastMissionPct = -1;
+  let lastMissionVisible = null;
 
   const cacheElements = () => {
     // Screens
@@ -1016,53 +1028,6 @@ const UI = (() => {
         });
       });
 
-      // Delegated document listeners for click & touchend (triple redundancy)
-      const handleGlobalModalTrigger = (e) => {
-        const btn = e.target.closest('button, [role="button"], [data-close]');
-        if (!btn) return;
-
-        const id = btn.id;
-        const closeId = btn.getAttribute('data-close');
-
-        if (closeId) {
-          try { SoundEngine.playClick(); } catch (_) {}
-          this.closeModal(closeId);
-          e.preventDefault();
-          return;
-        }
-
-        if (id === 'btn-open-modes' || id === 'btn-banner-modes' || id === 'btn-gameover-modes') {
-          this.openModesModal();
-          e.preventDefault();
-        } else if (id === 'btn-open-themes') {
-          this.openThemesModal();
-          e.preventDefault();
-        } else if (id === 'btn-open-settings') {
-          this.openSettingsModal();
-          e.preventDefault();
-        } else if (id === 'btn-open-stats') {
-          this.openStatsModal();
-          e.preventDefault();
-        } else if (id === 'btn-open-leaderboard') {
-          this.openLeaderboardModal();
-          e.preventDefault();
-        } else if (id === 'btn-open-achievements') {
-          this.openAchievementsModal();
-          e.preventDefault();
-        } else if (id === 'btn-open-how-to') {
-          this.openHowToModal();
-          e.preventDefault();
-        }
-      };
-
-      document.addEventListener('click', handleGlobalModalTrigger);
-      document.addEventListener('touchend', (e) => {
-        const btn = e.target.closest('.home-nav .btn, .btn-switch-mode, .btn-modal-close, [data-close]');
-        if (btn) {
-          handleGlobalModalTrigger(e);
-        }
-      }, { passive: false });
-
       // Settings: Tabs
       document.querySelectorAll('.settings-tabs .tab-btn').forEach(btn => {
         btn.addEventListener('click', () => {
@@ -1210,7 +1175,7 @@ const UI = (() => {
       if (els.btnThemeReset) {
         els.btnThemeReset.addEventListener('click', () => {
           SoundEngine.playClick();
-          Themes.apply('neon-green');
+          Themes.apply('pastel-world');
           this.renderThemes();
         });
       }
@@ -1389,17 +1354,21 @@ const UI = (() => {
       if (els.hudSpeed) els.hudSpeed.textContent = `${speedMultiplier.toFixed(1)}x`;
     },
 
-    // Time Attack Timer Display
+    // Time Attack Timer Display (memoized to avoid per-frame DOM writes)
     updateTimer(secondsRemaining) {
       if (!els.hudTimerVal) return;
       const totalSecs = Math.max(0, Math.ceil(secondsRemaining));
       const mins = Math.floor(totalSecs / 60);
       const secs = totalSecs % 60;
-      els.hudTimerVal.textContent = `${mins}:${String(secs).padStart(2, '0')}`;
-      if (totalSecs <= 10) {
-        els.hudTimerVal.classList.add('timer-urgent');
-      } else {
-        els.hudTimerVal.classList.remove('timer-urgent');
+      const text = `${mins}:${String(secs).padStart(2, '0')}`;
+      if (text !== lastTimerText) {
+        lastTimerText = text;
+        els.hudTimerVal.textContent = text;
+      }
+      const isUrgent = totalSecs <= 10;
+      if (isUrgent !== lastTimerUrgent) {
+        lastTimerUrgent = isUrgent;
+        els.hudTimerVal.classList.toggle('timer-urgent', isUrgent);
       }
     },
 
@@ -1410,23 +1379,41 @@ const UI = (() => {
       }
     },
 
-    // Bonus Star Timer Bar
+    // Bonus Star Timer Bar (memoized to avoid per-frame DOM thrashing)
     updateBonusBar(remaining, maxTime) {
-      if (remaining > 0) {
-        els.bonusBanner.classList.remove('hide');
-        const pct = Math.max(0, Math.min(100, (remaining / maxTime) * 100));
-        els.bonusTimerFill.style.width = `${pct}%`;
-      } else {
-        els.bonusBanner.classList.add('hide');
+      const visible = remaining > 0;
+      if (visible !== lastBonusVisible) {
+        lastBonusVisible = visible;
+        els.bonusBanner.classList.toggle('hide', !visible);
+        if (!visible) lastBonusPct = -1;
+      }
+      if (visible) {
+        const pct = Math.max(0, Math.min(100, Math.round((remaining / maxTime) * 100)));
+        if (pct !== lastBonusPct) {
+          lastBonusPct = pct;
+          els.bonusTimerFill.style.width = `${pct}%`;
+        }
+      }
+    },
+
+    cancelCountdown() {
+      if (countdownTimerId) {
+        clearTimeout(countdownTimerId);
+        countdownTimerId = null;
+      }
+      if (els.countdownOverlay) {
+        els.countdownOverlay.classList.add('hide');
       }
     },
 
     // Countdown Overlay (3, 2, 1, GO!)
     showCountdown(count, onComplete) {
+      this.cancelCountdown();
       els.countdownOverlay.classList.remove('hide');
       let current = count;
 
       const tick = () => {
+        countdownTimerId = null;
         if (current > 0) {
           els.countdownText.textContent = current;
           els.countdownText.style.animation = 'none';
@@ -1434,7 +1421,7 @@ const UI = (() => {
           els.countdownText.style.animation = 'countdownPop 0.85s cubic-bezier(0.18, 0.89, 0.32, 1.28) forwards';
           SoundEngine.playCountdown(false);
           current--;
-          setTimeout(tick, 900);
+          countdownTimerId = setTimeout(tick, 900);
         } else if (current === 0) {
           els.countdownText.textContent = 'GO!';
           els.countdownText.style.animation = 'none';
@@ -1442,7 +1429,7 @@ const UI = (() => {
           els.countdownText.style.animation = 'countdownPop 0.85s cubic-bezier(0.18, 0.89, 0.32, 1.28) forwards';
           SoundEngine.playCountdown(true);
           current--;
-          setTimeout(tick, 750);
+          countdownTimerId = setTimeout(tick, 750);
         } else {
           els.countdownOverlay.classList.add('hide');
           if (onComplete) onComplete();
@@ -2481,23 +2468,25 @@ const UI = (() => {
     },
 
     // ==========================================
-    // In-Game Gameplay HUD Elements
+    // In-Game Gameplay HUD Elements (memoized to prevent 60fps DOM thrashing)
     // ==========================================
     updatePowerUpBar(activeEffects) {
       const container = document.getElementById('hud-powerups-container');
       if (!container) return;
-      if (!activeEffects) {
-        container.innerHTML = '';
-        container.classList.add('hide');
-        return;
-      }
-      const keys = Object.keys(activeEffects);
+      const keys = activeEffects ? Object.keys(activeEffects) : [];
       if (keys.length === 0) {
-        container.innerHTML = '';
-        container.classList.add('hide');
+        if (lastPowerUpVisible !== false) {
+          lastPowerUpVisible = false;
+          lastPowerUpHtml = '';
+          container.innerHTML = '';
+          container.classList.add('hide');
+        }
         return;
       }
-      container.classList.remove('hide');
+      if (lastPowerUpVisible !== true) {
+        lastPowerUpVisible = true;
+        container.classList.remove('hide');
+      }
       let html = '';
       keys.forEach(k => {
         const item = activeEffects[k];
@@ -2509,38 +2498,60 @@ const UI = (() => {
           </div>
         `;
       });
-      container.innerHTML = html;
+      if (html !== lastPowerUpHtml) {
+        lastPowerUpHtml = html;
+        container.innerHTML = html;
+      }
     },
 
     updateGhostDelta(delta) {
       const el = document.getElementById('hud-ghost-delta');
       if (!el) return;
       if (delta === null || typeof delta === 'undefined') {
-        el.classList.add('hide');
+        if (lastGhostVisible !== false) {
+          lastGhostVisible = false;
+          lastGhostText = '';
+          el.classList.add('hide');
+        }
         return;
       }
-      el.classList.remove('hide');
-      if (delta >= 0) {
-        el.className = 'hud-ghost-pill ghost-ahead';
-        el.textContent = `+${delta} Ahead 👻`;
-      } else {
-        el.className = 'hud-ghost-pill ghost-behind';
-        el.textContent = `${delta} Behind 👻`;
+      const nextClass = delta >= 0 ? 'hud-ghost-pill ghost-ahead' : 'hud-ghost-pill ghost-behind';
+      const nextText = delta >= 0 ? `+${delta} Ahead 👻` : `${delta} Behind 👻`;
+      if (lastGhostVisible !== true || nextText !== lastGhostText) {
+        lastGhostVisible = true;
+        lastGhostText = nextText;
+        el.className = nextClass;
+        el.textContent = nextText;
       }
     },
 
     updateAdventureMissionHUD(text, percent) {
       const elBanner = document.getElementById('hud-adventure-mission');
-      const elText = document.getElementById('hud-mission-text');
-      const elBar = document.getElementById('hud-mission-bar');
       if (!elBanner) return;
       if (!text) {
-        elBanner.classList.add('hide');
+        if (lastMissionVisible !== false) {
+          lastMissionVisible = false;
+          lastMissionText = '';
+          lastMissionPct = -1;
+          elBanner.classList.add('hide');
+        }
         return;
       }
-      elBanner.classList.remove('hide');
-      if (elText) elText.textContent = text;
-      if (elBar) elBar.style.width = `${percent}%`;
+      if (lastMissionVisible !== true) {
+        lastMissionVisible = true;
+        elBanner.classList.remove('hide');
+      }
+      if (text !== lastMissionText) {
+        lastMissionText = text;
+        const elText = document.getElementById('hud-mission-text');
+        if (elText) elText.textContent = text;
+      }
+      const roundedPct = Math.round(percent);
+      if (roundedPct !== lastMissionPct) {
+        lastMissionPct = roundedPct;
+        const elBar = document.getElementById('hud-mission-bar');
+        if (elBar) elBar.style.width = `${roundedPct}%`;
+      }
     },
 
     showPowerUpToast(def) {

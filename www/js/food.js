@@ -227,9 +227,11 @@ class FoodManager {
       ctx.ellipse(cx, this.bonusFood.y * cellSize + cellSize * 0.88, outerR * 0.85, outerR * 0.26, 0, 0, Math.PI * 2);
       ctx.fill();
 
-      // Soft golden aura glow
-      ctx.shadowColor = 'rgba(255, 215, 0, 0.45)';
-      ctx.shadowBlur = 12;
+      // Soft golden aura glow (lightweight radial halo instead of expensive shadowBlur)
+      ctx.fillStyle = 'rgba(255, 215, 0, 0.22)';
+      ctx.beginPath();
+      ctx.arc(cx, cy, outerR * 1.25, 0, Math.PI * 2);
+      ctx.fill();
 
       // Draw Cute 5-pointed Rounded Star
       ctx.fillStyle = bonusColor;

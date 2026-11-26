@@ -8,13 +8,13 @@
   <link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
   <title>NEON SNAKE – Casual Arcade Game</title>
 
-  <!-- Google Fonts: Modern Professional Gaming Typography (Outfit & Plus Jakarta Sans) -->
+  <!-- Google Fonts: Modern Professional Gaming Typography (non-blocking for offline WebView) -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700;800&family=Plus+Jakarta+Sans:wght@500;600;700;800&family=Fredoka:wght@500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700;800&family=Plus+Jakarta+Sans:wght@500;600;700;800&family=Fredoka:wght@500;600;700&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
 
-  <link rel="stylesheet" href="css/style.css?v=10.6">
-  <link rel="stylesheet" href="css/responsive.css?v=10.6">
+  <link rel="stylesheet" href="css/style.css?v=10.9">
+  <link rel="stylesheet" href="css/responsive.css?v=10.9">
 </head>
 <body>
   <!-- Ambient Soft Pastel Background Floating Blobs -->
@@ -139,7 +139,7 @@
               </div>
 
               <!-- Evolution Stage Badge -->
-              <div class="header-evolution-pill" id="header-evolution-badge" title="Snake Evolution Stage" onclick="UI.showEvolutionCelebration(SnakeEvolution.getEvolutionData())" role="button" tabindex="0">
+              <div class="header-evolution-pill" id="header-evolution-badge" title="Snake Evolution Stage" onclick="UI.showEvolutionCelebration(SnakeEvolution.getCurrentStage())" role="button" tabindex="0">
                 <span class="evolution-icon-svg" aria-hidden="true">
                   <svg viewBox="0 0 24 24"><path fill="#F59E0B" d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l7.09-1.01L12 2z"/></svg>
                 </span>
@@ -171,6 +171,14 @@
 
           </div>
         </header>
+
+        <!-- Primary Bouncy Action Button (Placed on top for instant play) -->
+        <div class="home-actions">
+          <button type="button" id="btn-play-game" class="btn-play-bouncy">
+            <svg class="play-icon" viewBox="0 0 24 24"><polygon fill="currentColor" points="8,5 19,12 8,19"/></svg>
+            <span class="play-btn-text">PLAY GAME</span>
+          </button>
+        </div>
 
         <!-- 6 Distinct Colorful Cards Grid -->
         <div class="home-cards-section">
@@ -318,14 +326,6 @@
             </div>
 
           </div>
-        </div>
-
-        <!-- Primary Bouncy Action Button (Placed on top for instant play) -->
-        <div class="home-actions">
-          <button type="button" id="btn-play-game" class="btn-play-bouncy">
-            <svg class="play-icon" viewBox="0 0 24 24"><polygon fill="currentColor" points="8,5 19,12 8,19"/></svg>
-            <span class="play-btn-text">PLAY GAME</span>
-          </button>
         </div>
 
         <!-- Selected Game Mode Quick Banner -->

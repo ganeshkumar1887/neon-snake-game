@@ -1,0 +1,175 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+
+  <defs>
+    <!-- Background Gradient -->
+    <radialGradient id="bgGrad" cx="50%" cy="35%" r="70%">
+      <stop offset="0%" stop-color="#F0FDF4"/>
+      <stop offset="45%" stop-color="#DCFCE7"/>
+      <stop offset="85%" stop-color="#86EFAC"/>
+      <stop offset="100%" stop-color="#4ADE80"/>
+    </radialGradient>
+
+    <!-- Outer Rim Light -->
+    <linearGradient id="rimGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.9"/>
+      <stop offset="50%" stop-color="#A7F3D0" stop-opacity="0.4"/>
+      <stop offset="100%" stop-color="#059669" stop-opacity="0.8"/>
+    </linearGradient>
+
+    <!-- Snake Gradients -->
+    <radialGradient id="snakeHeadGrad" cx="35%" cy="30%" r="70%">
+      <stop offset="0%" stop-color="#A3F75D"/>
+      <stop offset="50%" stop-color="#4ECB23"/>
+      <stop offset="100%" stop-color="#1B7509"/>
+    </radialGradient>
+    <radialGradient id="snakeBodyGrad" cx="35%" cy="30%" r="70%">
+      <stop offset="0%" stop-color="#A3F75D"/>
+      <stop offset="55%" stop-color="#4ECB23"/>
+      <stop offset="100%" stop-color="#196D07"/>
+    </radialGradient>
+
+    <!-- Strawberry Fruit -->
+    <radialGradient id="strawberryGrad" cx="35%" cy="30%" r="70%">
+      <stop offset="0%" stop-color="#FF7B7B"/>
+      <stop offset="65%" stop-color="#EF4444"/>
+      <stop offset="100%" stop-color="#B91C1C"/>
+    </radialGradient>
+
+    <clipPath id="circleClip">
+      <circle cx="256" cy="256" r="256"/>
+    </clipPath>
+  </defs>
+
+  <!-- Base Background -->
+  <rect width="512" height="512" rx="115" fill="url(#bgGrad)"/>
+  <rect width="504" height="504" x="4" y="4" rx="111" fill="none" stroke="url(#rimGrad)" stroke-width="8"/>
+  
+  <!-- Subtle Soft Sun / Cloud in Background -->
+  <circle cx="420" cy="90" r="85" fill="#FEF08A" opacity="0.45"/>
+  <circle cx="420" cy="90" r="50" fill="#FEF08A" opacity="0.6"/>
+
+
+  <!-- Soft Under-Snake Ground Shadow -->
+  <ellipse cx="256" cy="390" rx="145" ry="24" fill="#064E3B" opacity="0.25"/>
+
+  <!-- Coiled Snake Body Segments (Back to Front) -->
+  <!-- Segment 7: Tail Tip -->
+  <g>
+    <circle cx="120" cy="350" r="22" fill="url(#snakeBodyGrad)"/>
+    <ellipse cx="120" cy="355" rx="16" ry="10" fill="#FFF3A3"/>
+    <circle cx="106" cy="340" r="14" fill="url(#snakeBodyGrad)"/>
+    <ellipse cx="106" cy="343" rx="10" ry="7" fill="#FFF3A3"/>
+  </g>
+
+  <!-- Segment 6 -->
+  <g>
+    <circle cx="152" cy="360" r="28" fill="url(#snakeBodyGrad)"/>
+    <ellipse cx="152" cy="366" rx="21" ry="13" fill="#FFF3A3"/>
+  </g>
+
+  <!-- Segment 5 -->
+  <g>
+    <circle cx="196" cy="370" r="34" fill="url(#snakeBodyGrad)"/>
+    <ellipse cx="196" cy="377" rx="26" ry="16" fill="#FFF3A3"/>
+  </g>
+
+  <!-- Segment 4 (Looping right) -->
+  <g>
+    <circle cx="248" cy="374" r="38" fill="url(#snakeBodyGrad)"/>
+    <ellipse cx="248" cy="382" rx="29" ry="18" fill="#FFF3A3"/>
+    <ellipse cx="242" cy="350" rx="14" ry="6" fill="#FFFFFF" opacity="0.45"/>
+  </g>
+
+  <!-- Segment 3 -->
+  <g>
+    <circle cx="304" cy="366" r="40" fill="url(#snakeBodyGrad)"/>
+    <ellipse cx="304" cy="374" rx="31" ry="19" fill="#FFF3A3"/>
+    <ellipse cx="300" cy="340" rx="15" ry="7" fill="#FFFFFF" opacity="0.45"/>
+  </g>
+
+  <!-- Segment 2 (Neck arching up) -->
+  <g>
+    <circle cx="352" cy="334" r="42" fill="url(#snakeBodyGrad)"/>
+    <ellipse cx="352" cy="342" rx="32" ry="20" fill="#FFF3A3"/>
+    <ellipse cx="350" cy="306" rx="16" ry="8" fill="#FFFFFF" opacity="0.5"/>
+  </g>
+
+  <!-- Segment 1 (Supporting head) -->
+  <g>
+    <circle cx="354" cy="272" r="45" fill="url(#snakeBodyGrad)"/>
+    <ellipse cx="354" cy="281" rx="33" ry="21" fill="#FFF3A3"/>
+  </g>
+
+  <!-- ==================== CUTE CARTOON SNAKE HEAD ==================== -->
+  <g id="snake-head">
+    <!-- Head Base (Plump friendly oval) -->
+    <ellipse cx="270" cy="210" rx="72" ry="65" fill="url(#snakeHeadGrad)"/>
+    
+    <!-- Snout & Under-jaw / Cream Belly -->
+    <ellipse cx="250" cy="236" rx="52" ry="32" fill="#FFF3A3"/>
+    
+    <!-- Friendly Big Smile Curve -->
+    <path d="M 216 230 Q 248 254 286 232" stroke="#166534" stroke-width="5.5" stroke-linecap="round" fill="none"/>
+    
+    <!-- Cheerful Tongue peeking out -->
+    <path d="M 258 248 Q 266 268 274 278 L 285 271 M 274 278 L 278 288" stroke="#FF6B8B" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+
+    <!-- Cute Rosy Blush Cheeks -->
+    <ellipse cx="206" cy="226" rx="15" ry="12" fill="#FF7E98" opacity="0.88"/>
+    <ellipse cx="298" cy="222" rx="15" ry="12" fill="#FF7E98" opacity="0.88"/>
+
+    <!-- Left Expressive Cartoon Eye -->
+    <g id="left-eye">
+      <ellipse cx="234" cy="180" rx="20" ry="25" fill="#FFFFFF"/>
+      <ellipse cx="238" cy="182" rx="14" ry="18" fill="#1E1B24"/>
+      <!-- Sparkle highlights in pupil -->
+      <circle cx="233" cy="174" r="6" fill="#FFFFFF"/>
+      <circle cx="242" cy="190" r="3" fill="#FFFFFF"/>
+    </g>
+
+    <!-- Right Expressive Cartoon Eye -->
+    <g id="right-eye">
+      <ellipse cx="282" cy="176" rx="20" ry="25" fill="#FFFFFF"/>
+      <ellipse cx="284" cy="178" rx="14" ry="18" fill="#1E1B24"/>
+      <!-- Sparkle highlights in pupil -->
+      <circle cx="279" cy="170" r="6" fill="#FFFFFF"/>
+      <circle cx="288" cy="186" r="3" fill="#FFFFFF"/>
+    </g>
+
+    <!-- Glossy Head Highlight (3D shine on dome) -->
+    <ellipse cx="260" cy="160" rx="30" ry="10" transform="rotate(-12 260 160)" fill="#FFFFFF" opacity="0.65"/>
+    
+    <!-- Nostrils -->
+    <circle cx="236" cy="216" r="2.5" fill="#166534" opacity="0.6"/>
+    <circle cx="254" cy="216" r="2.5" fill="#166534" opacity="0.6"/>
+  </g>
+
+  <!-- Little Yummy Strawberry next to Snake -->
+  <g transform="translate(145, 290)">
+    <!-- Shadow -->
+    <ellipse cx="0" cy="38" rx="22" ry="8" fill="#064E3B" opacity="0.3"/>
+    <!-- Strawberry body -->
+    <path d="M 0 -18 C 26 -18 32 12 0 34 C -32 12 -26 -18 0 -18 Z" fill="url(#strawberryGrad)"/>
+    <!-- Specular highlight -->
+    <ellipse cx="-8" cy="-6" rx="7" ry="4" transform="rotate(-30 -8 -6)" fill="#FFFFFF" opacity="0.7"/>
+    <!-- Seeds -->
+    <circle cx="-9" cy="0" r="2" fill="#FEF08A"/>
+    <circle cx="9" cy="0" r="2" fill="#FEF08A"/>
+    <circle cx="0" cy="11" r="2" fill="#FEF08A"/>
+    <circle cx="-6" cy="21" r="1.6" fill="#FEF08A"/>
+    <circle cx="6" cy="21" r="1.6" fill="#FEF08A"/>
+    <!-- Green Leaves -->
+    <path d="M 0 -18 L -13 -26 L -4 -20 L 0 -29 L 4 -20 L 13 -26 Z" fill="#22C55E"/>
+  </g>
+
+  <!-- Golden Twinkle Sparkles in Background -->
+  <g fill="#F59E0B">
+    <!-- Star Top Right -->
+    <path d="M 390 120 Q 390 135 405 135 Q 390 135 390 150 Q 390 135 375 135 Q 390 135 390 120 Z"/>
+    <circle cx="415" cy="165" r="4" fill="#FBBF24"/>
+    <!-- Star Top Left -->
+    <path d="M 125 150 Q 125 162 137 162 Q 125 162 125 174 Q 125 162 113 162 Q 125 162 125 150 Z"/>
+    <circle cx="105" cy="190" r="3.5" fill="#FBBF24"/>
+  </g>
+
+</svg>

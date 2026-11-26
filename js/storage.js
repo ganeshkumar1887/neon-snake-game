@@ -42,14 +42,34 @@ const Storage = (() => {
 
   const hasStorage = isAvailable();
   const memoryStore = {};
+  const parsedCache = {};
+
+  const cloneShallow = (val) => {
+    if (Array.isArray(val)) return val.slice();
+    if (val && typeof val === 'object') return { ...val };
+    return val;
+  };
 
   const getItem = (key, fallback = null) => {
     try {
+      if (Object.prototype.hasOwnProperty.call(parsedCache, key)) {
+        return cloneShallow(parsedCache[key]);
+      }
       if (hasStorage) {
         const val = localStorage.getItem(key);
-        return val !== null ? JSON.parse(val) : fallback;
+        if (val !== null) {
+          const parsed = JSON.parse(val);
+          parsedCache[key] = parsed;
+          return cloneShallow(parsed);
+        }
+        return fallback;
       }
-      return memoryStore[key] ? JSON.parse(memoryStore[key]) : fallback;
+      if (memoryStore[key]) {
+        const parsed = JSON.parse(memoryStore[key]);
+        parsedCache[key] = parsed;
+        return cloneShallow(parsed);
+      }
+      return fallback;
     } catch (e) {
       console.warn('Storage read error:', e);
       return fallback;
@@ -59,6 +79,7 @@ const Storage = (() => {
   const setItem = (key, value) => {
     try {
       const serialized = JSON.stringify(value);
+      parsedCache[key] = JSON.parse(serialized);
       if (hasStorage) {
         localStorage.setItem(key, serialized);
       } else {
