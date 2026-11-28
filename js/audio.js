@@ -10,6 +10,7 @@ const SoundEngine = (() => {
   let masterGain = null;
   let bgmGain = null;
   let sfxGain = null;
+  let noiseBuffer = null;
 
   let isSoundEnabled = true;
   let isSfxEnabled = true;
@@ -19,8 +20,21 @@ const SoundEngine = (() => {
   let isBgmPlaying = false;
   let bgmInterval = null;
   let bgmStep = 0;
+  let lastTurnSoundAt = 0;
 
-  // Initialize Audio Context on first user interaction
+  const BGM_BASE_LEVEL = 0.42;
+
+  const ensureNoiseBuffer = () => {
+    if (!ctx || noiseBuffer) return;
+    const len = Math.floor(ctx.sampleRate * 0.8);
+    noiseBuffer = ctx.createBuffer(1, len, ctx.sampleRate);
+    const data = noiseBuffer.getChannelData(0);
+    for (let i = 0; i < len; i++) {
+      data[i] = Math.random() * 2 - 1;
+    }
+  };
+
+  // Initialize or resume Audio Context on user interaction
   const initContext = () => {
     try {
       if (!ctx) {
@@ -33,12 +47,14 @@ const SoundEngine = (() => {
         masterGain.connect(ctx.destination);
 
         sfxGain = ctx.createGain();
-        sfxGain.gain.value = isSfxEnabled ? 0.9 : 0;
+        sfxGain.gain.value = isSfxEnabled ? 0.95 : 0;
         sfxGain.connect(masterGain);
 
         bgmGain = ctx.createGain();
-        bgmGain.gain.value = isBgmEnabled ? 0.22 : 0;
+        bgmGain.gain.value = isBgmEnabled ? BGM_BASE_LEVEL : 0;
         bgmGain.connect(masterGain);
+
+        ensureNoiseBuffer();
       }
 
       if (ctx && ctx.state === 'suspended' && !document.hidden) {
@@ -47,8 +63,61 @@ const SoundEngine = (() => {
     } catch (e) {}
   };
 
-  const canPlayAudio = () => {
-    return !!(ctx && ctx.state === 'running' && !document.hidden);
+  // Synthesize realistic snake hiss ("sssss") using filtered noise + tongue flutter LFO
+  const triggerSnakeHiss = (duration = 0.24, volume = 0.28, startDelay = 0) => {
+    if (!ctx || !sfxGain) return;
+    ensureNoiseBuffer();
+    if (!noiseBuffer) return;
+
+    const now = ctx.currentTime + startDelay;
+    const src = ctx.createBufferSource();
+    src.buffer = noiseBuffer;
+    src.loop = true;
+
+    const bandpass = ctx.createBiquadFilter();
+    bandpass.type = 'bandpass';
+    bandpass.frequency.setValueAtTime(3600, now);
+    bandpass.frequency.exponentialRampToValueAtTime(5600, now + duration * 0.45);
+    bandpass.frequency.exponentialRampToValueAtTime(3200, now + duration);
+    bandpass.Q.value = 2.4;
+
+    const highpass = ctx.createBiquadFilter();
+    highpass.type = 'highpass';
+    highpass.frequency.value = 1800;
+
+    const hissGain = ctx.createGain();
+    hissGain.gain.setValueAtTime(0.001, now);
+    hissGain.gain.linearRampToValueAtTime(volume, now + Math.min(0.03, duration * 0.2));
+    hissGain.gain.exponentialRampToValueAtTime(0.001, now + duration);
+
+    // Tongue flutter modulation (~24 Hz)
+    const lfo = ctx.createOscillator();
+    const lfoGain = ctx.createGain();
+    lfo.frequency.value = 24;
+    lfoGain.gain.value = volume * 0.35;
+    lfo.connect(lfoGain);
+    lfoGain.connect(hissGain.gain);
+
+    src.connect(bandpass);
+    bandpass.connect(highpass);
+    highpass.connect(hissGain);
+    hissGain.connect(sfxGain);
+
+    src.onended = () => {
+      try {
+        lfo.stop();
+        lfo.disconnect();
+        lfoGain.disconnect();
+        src.disconnect();
+        bandpass.disconnect();
+        highpass.disconnect();
+        hissGain.disconnect();
+      } catch (_) {}
+    };
+
+    lfo.start(now);
+    src.start(now);
+    src.stop(now + duration);
   };
 
   return {
@@ -59,16 +128,14 @@ const SoundEngine = (() => {
       isBgmEnabled = settings.bgmEnabled ?? true;
       masterVolume = (typeof settings.volume === 'number') ? settings.volume : 0.8;
 
-      // Unlock Web Audio context on the first user interaction
+      // Unlock / resume Web Audio context on user gestures
       const unlockAudio = () => {
         initContext();
-        window.removeEventListener('click', unlockAudio);
-        window.removeEventListener('keydown', unlockAudio);
-        window.removeEventListener('touchstart', unlockAudio);
       };
-      window.addEventListener('click', unlockAudio, { once: true });
-      window.addEventListener('keydown', unlockAudio, { once: true });
-      window.addEventListener('touchstart', unlockAudio, { once: true });
+      window.addEventListener('pointerdown', unlockAudio, { passive: true });
+      window.addEventListener('touchstart', unlockAudio, { passive: true });
+      window.addEventListener('click', unlockAudio, { passive: true });
+      window.addEventListener('keydown', unlockAudio, { passive: true });
 
       document.addEventListener('visibilitychange', () => {
         if (!ctx) return;
@@ -96,14 +163,14 @@ const SoundEngine = (() => {
     setSfxEnabled(enabled) {
       isSfxEnabled = !!enabled;
       if (sfxGain && ctx) {
-        sfxGain.gain.setValueAtTime(isSfxEnabled ? 0.9 : 0, ctx.currentTime);
+        sfxGain.gain.setValueAtTime(isSfxEnabled ? 0.95 : 0, ctx.currentTime);
       }
     },
 
     setBgmEnabled(enabled) {
       isBgmEnabled = !!enabled;
       if (bgmGain && ctx) {
-        bgmGain.gain.setValueAtTime(isBgmEnabled ? 0.22 : 0, ctx.currentTime);
+        bgmGain.gain.setValueAtTime(isBgmEnabled ? BGM_BASE_LEVEL : 0, ctx.currentTime);
       }
       if (!isBgmEnabled) {
         this.stopBGM();
@@ -121,122 +188,168 @@ const SoundEngine = (() => {
       return !isSoundEnabled;
     },
 
-    vibrate(pattern = 15) {
+    isSfxMuted() {
+      return !isSoundEnabled || !isSfxEnabled;
+    },
+
+    isBgmMuted() {
+      return !isSoundEnabled || !isBgmEnabled;
+    },
+
+    vibrate(pattern = 25) {
       const settings = (typeof Storage !== 'undefined') ? Storage.getSettings() : {};
-      if (settings.vibration !== false && navigator.vibrate) {
+      if (settings.vibration !== false && navigator && typeof navigator.vibrate === 'function') {
         try {
           navigator.vibrate(pattern);
         } catch (e) {}
       }
     },
 
-    // 1. Eat Food Sound (Rising dual neon tone)
-    playEat() {
+    // Realistic Snake Hiss Voice
+    playSnakeHiss(duration = 0.25, volume = 0.28) {
       if (!isSoundEnabled || !isSfxEnabled) return;
       initContext();
       if (!ctx) return;
-
-      const now = ctx.currentTime;
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-
-      osc.type = 'triangle';
-      osc.frequency.setValueAtTime(440, now);
-      osc.frequency.exponentialRampToValueAtTime(880, now + 0.08);
-
-      gain.gain.setValueAtTime(0.4, now);
-      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.12);
-
-      osc.connect(gain);
-      gain.connect(sfxGain);
-
-      osc.start(now);
-      osc.stop(now + 0.12);
-      this.vibrate(15);
+      try {
+        triggerSnakeHiss(duration, volume);
+      } catch (_) {}
     },
 
-    // 2. Bonus Golden Star Eat Sound (Triple sparkling chime)
-    playBonusEat() {
+    // Subtle throttled snake slither whisper on direction turns
+    playSlitherTurn() {
+      if (!isSoundEnabled || !isSfxEnabled) return;
+      const nowMs = performance.now();
+      if (nowMs - lastTurnSoundAt < 180) return;
+      lastTurnSoundAt = nowMs;
+      initContext();
+      if (!ctx || ctx.state !== 'running') return;
+      try {
+        triggerSnakeHiss(0.075, 0.08);
+      } catch (_) {}
+    },
+
+    // 1. Eat Food Sound (Snake bite/hiss + juicy gulp + bright pop + crisp eat vibration)
+    playEat() {
+      this.vibrate(38);
       if (!isSoundEnabled || !isSfxEnabled) return;
       initContext();
       if (!ctx) return;
 
-      const now = ctx.currentTime;
-      const notes = [659.25, 880, 1318.51]; // E5, A5, E6
+      try {
+        const now = ctx.currentTime;
 
-      notes.forEach((freq, idx) => {
+        // Crisp snake snap hiss
+        triggerSnakeHiss(0.14, 0.24);
+
+        // Swallow / gulp drop
+        const gulpOsc = ctx.createOscillator();
+        const gulpGain = ctx.createGain();
+        gulpOsc.type = 'sine';
+        gulpOsc.frequency.setValueAtTime(340, now);
+        gulpOsc.frequency.exponentialRampToValueAtTime(145, now + 0.09);
+        gulpGain.gain.setValueAtTime(0.32, now);
+        gulpGain.gain.exponentialRampToValueAtTime(0.001, now + 0.1);
+        gulpOsc.connect(gulpGain);
+        gulpGain.connect(sfxGain);
+        gulpOsc.start(now);
+        gulpOsc.stop(now + 0.1);
+
+        // Bright fruit pop chime
+        const popOsc = ctx.createOscillator();
+        const popGain = ctx.createGain();
+        popOsc.type = 'triangle';
+        popOsc.frequency.setValueAtTime(520, now + 0.03);
+        popOsc.frequency.exponentialRampToValueAtTime(920, now + 0.11);
+        popGain.gain.setValueAtTime(0.34, now + 0.03);
+        popGain.gain.exponentialRampToValueAtTime(0.001, now + 0.14);
+        popOsc.connect(popGain);
+        popGain.connect(sfxGain);
+        popOsc.start(now + 0.03);
+        popOsc.stop(now + 0.14);
+      } catch (_) {}
+    },
+
+    // 2. Bonus Golden Star Eat Sound (Excited snake hiss + sparkling chime + strong vibration)
+    playBonusEat() {
+      this.vibrate([45, 30, 65]);
+      if (!isSoundEnabled || !isSfxEnabled) return;
+      initContext();
+      if (!ctx) return;
+
+      try {
+        triggerSnakeHiss(0.2, 0.28);
+        const now = ctx.currentTime;
+        const notes = [659.25, 880, 1318.51]; // E5, A5, E6
+
+        notes.forEach((freq, idx) => {
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          const startTime = now + idx * 0.06;
+
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(freq, startTime);
+
+          gain.gain.setValueAtTime(0.35, startTime);
+          gain.gain.exponentialRampToValueAtTime(0.001, startTime + 0.18);
+
+          osc.connect(gain);
+          gain.connect(sfxGain);
+
+          osc.start(startTime);
+          osc.stop(startTime + 0.18);
+        });
+      } catch (_) {}
+    },
+
+    // 3. Collision / Game Over Sound (Angry snake hiss + detuned bass dive + thud + vibration)
+    playGameOver() {
+      this.vibrate([80, 45, 110]);
+      if (!isSoundEnabled || !isSfxEnabled) return;
+      initContext();
+      if (!ctx) return;
+
+      try {
+        triggerSnakeHiss(0.36, 0.42);
+        const now = ctx.currentTime;
+
         const osc = ctx.createOscillator();
         const gain = ctx.createGain();
-        const startTime = now + idx * 0.06;
 
-        osc.type = 'sine';
-        osc.frequency.setValueAtTime(freq, startTime);
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(260, now);
+        osc.frequency.exponentialRampToValueAtTime(35, now + 0.45);
 
-        gain.gain.setValueAtTime(0.35, startTime);
-        gain.gain.exponentialRampToValueAtTime(0.001, startTime + 0.18);
+        gain.gain.setValueAtTime(0.55, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.5);
 
         osc.connect(gain);
         gain.connect(sfxGain);
 
-        osc.start(startTime);
-        osc.stop(startTime + 0.18);
-      });
-      this.vibrate([20, 30, 40]);
-    },
+        osc.start(now);
+        osc.stop(now + 0.5);
 
-    // 3. Collision / Game Over Sound (Detuned bass crash & descending dive)
-    playGameOver() {
-      if (!isSoundEnabled || !isSfxEnabled) return;
-      initContext();
-      if (!ctx) return;
+        ensureNoiseBuffer();
+        if (noiseBuffer) {
+          const noise = ctx.createBufferSource();
+          noise.buffer = noiseBuffer;
 
-      const now = ctx.currentTime;
+          const filter = ctx.createBiquadFilter();
+          filter.type = 'lowpass';
+          filter.frequency.setValueAtTime(1000, now);
+          filter.frequency.exponentialRampToValueAtTime(120, now + 0.25);
 
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
+          const noiseGain = ctx.createGain();
+          noiseGain.gain.setValueAtTime(0.38, now);
+          noiseGain.gain.exponentialRampToValueAtTime(0.001, now + 0.25);
 
-      osc.type = 'sawtooth';
-      osc.frequency.setValueAtTime(260, now);
-      osc.frequency.exponentialRampToValueAtTime(35, now + 0.45);
+          noise.connect(filter);
+          filter.connect(noiseGain);
+          noiseGain.connect(sfxGain);
 
-      gain.gain.setValueAtTime(0.6, now);
-      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.5);
-
-      osc.connect(gain);
-      gain.connect(sfxGain);
-
-      osc.start(now);
-      osc.stop(now + 0.5);
-
-      try {
-        const bufferSize = ctx.sampleRate * 0.25;
-        const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
-        const data = buffer.getChannelData(0);
-        for (let i = 0; i < bufferSize; i++) {
-          data[i] = Math.random() * 2 - 1;
+          noise.start(now);
+          noise.stop(now + 0.25);
         }
-
-        const noise = ctx.createBufferSource();
-        noise.buffer = buffer;
-
-        const filter = ctx.createBiquadFilter();
-        filter.type = 'lowpass';
-        filter.frequency.setValueAtTime(1000, now);
-        filter.frequency.exponentialRampToValueAtTime(120, now + 0.25);
-
-        const noiseGain = ctx.createGain();
-        noiseGain.gain.setValueAtTime(0.4, now);
-        noiseGain.gain.exponentialRampToValueAtTime(0.001, now + 0.25);
-
-        noise.connect(filter);
-        filter.connect(noiseGain);
-        noiseGain.connect(sfxGain);
-
-        noise.start(now);
-        noise.stop(now + 0.25);
-      } catch (e) {}
-
-      this.vibrate([60, 40, 90]);
+      } catch (_) {}
     },
 
     // 4. Subtle UI Click
@@ -289,6 +402,9 @@ const SoundEngine = (() => {
 
       osc.start(now);
       osc.stop(now + (isGo ? 0.35 : 0.15));
+      if (isGo) {
+        try { triggerSnakeHiss(0.24, 0.25, 0.04); } catch (_) {}
+      }
       this.vibrate(isGo ? 40 : 15);
     },
 
@@ -550,7 +666,7 @@ const SoundEngine = (() => {
       this.vibrate([40, 40, 60, 100]);
     },
 
-    // 15. Synthwave Ambient BGM Generator
+    // 15. Cheerful Casual Arcade Background Music Generator
     startBGM() {
       if (!isSoundEnabled || !isBgmEnabled || isBgmPlaying || document.hidden) return;
       initContext();
@@ -559,14 +675,20 @@ const SoundEngine = (() => {
       isBgmPlaying = true;
       bgmStep = 0;
 
+      // 16-step bouncy bassline (D minor / F major casual groove)
       const bassline = [
-        146.83, 146.83, 174.61, 146.83, 
-        196.00, 146.83, 220.00, 174.61
+        146.83, 0, 146.83, 174.61,
+        196.00, 0, 174.61, 146.83,
+        130.81, 0, 130.81, 164.81,
+        174.61, 0, 196.00, 220.00
       ];
 
-      const arpNotes = [
-        293.66, 349.23, 440.00, 523.25,
-        440.00, 349.23, 587.33, 440.00
+      // Cheerful arcade melody lead
+      const melodyNotes = [
+        587.33, 0, 659.25, 698.46,
+        587.33, 523.25, 440.00, 0,
+        523.25, 0, 587.33, 659.25,
+        523.25, 440.00, 392.00, 440.00
       ];
 
       if (bgmInterval) {
@@ -576,71 +698,106 @@ const SoundEngine = (() => {
 
       bgmInterval = setInterval(() => {
         if (!isBgmPlaying || !ctx || !isSoundEnabled || !isBgmEnabled || document.hidden) return;
-        if (!canPlayAudio()) {
-          if (ctx.state === 'suspended') ctx.resume().catch(() => {});
+        if (ctx.state === 'suspended') {
+          ctx.resume().catch(() => {});
           return;
         }
+        if (ctx.state !== 'running') return;
 
         try {
           const now = ctx.currentTime;
+          const stepIdx = bgmStep % 16;
 
-          // Bass pulse
-          const bassOsc = ctx.createOscillator();
-          const bassGain = ctx.createGain();
-          const filter = ctx.createBiquadFilter();
+          // 1. Warm bouncy bass pulse
+          const bassFreq = bassline[stepIdx];
+          if (bassFreq > 0) {
+            const bassOsc = ctx.createOscillator();
+            const bassGain = ctx.createGain();
+            const filter = ctx.createBiquadFilter();
 
-          bassOsc.type = 'sawtooth';
-          bassOsc.frequency.setValueAtTime(bassline[bgmStep % bassline.length], now);
+            bassOsc.type = 'triangle';
+            bassOsc.frequency.setValueAtTime(bassFreq, now);
 
-          filter.type = 'lowpass';
-          filter.frequency.setValueAtTime(450, now);
+            filter.type = 'lowpass';
+            filter.frequency.setValueAtTime(620, now);
 
-          bassGain.gain.setValueAtTime(0.25, now);
-          bassGain.gain.exponentialRampToValueAtTime(0.001, now + 0.16);
+            bassGain.gain.setValueAtTime(0.32, now);
+            bassGain.gain.exponentialRampToValueAtTime(0.001, now + 0.17);
 
-          bassOsc.connect(filter);
-          filter.connect(bassGain);
-          bassGain.connect(bgmGain);
+            bassOsc.connect(filter);
+            filter.connect(bassGain);
+            bassGain.connect(bgmGain);
 
-          bassOsc.onended = () => {
-            try {
-              bassOsc.disconnect();
-              filter.disconnect();
-              bassGain.disconnect();
-            } catch (_) {}
-          };
-
-          bassOsc.start(now);
-          bassOsc.stop(now + 0.16);
-
-          // Soft arp
-          if (bgmStep % 2 === 0) {
-            const arpOsc = ctx.createOscillator();
-            const arpGain = ctx.createGain();
-
-            arpOsc.type = 'sine';
-            arpOsc.frequency.setValueAtTime(arpNotes[Math.floor(bgmStep / 2) % arpNotes.length], now);
-
-            arpGain.gain.setValueAtTime(0.12, now);
-            arpGain.gain.exponentialRampToValueAtTime(0.001, now + 0.25);
-
-            arpOsc.connect(arpGain);
-            arpGain.connect(bgmGain);
-
-            arpOsc.onended = () => {
+            bassOsc.onended = () => {
               try {
-                arpOsc.disconnect();
-                arpGain.disconnect();
+                bassOsc.disconnect();
+                filter.disconnect();
+                bassGain.disconnect();
               } catch (_) {}
             };
 
-            arpOsc.start(now);
-            arpOsc.stop(now + 0.25);
+            bassOsc.start(now);
+            bassOsc.stop(now + 0.17);
+          }
+
+          // 2. Cheerful melody voice
+          const melFreq = melodyNotes[stepIdx];
+          if (melFreq > 0) {
+            const melOsc = ctx.createOscillator();
+            const melGain = ctx.createGain();
+
+            melOsc.type = 'sine';
+            melOsc.frequency.setValueAtTime(melFreq, now);
+
+            melGain.gain.setValueAtTime(0.18, now);
+            melGain.gain.exponentialRampToValueAtTime(0.001, now + 0.22);
+
+            melOsc.connect(melGain);
+            melGain.connect(bgmGain);
+
+            melOsc.onended = () => {
+              try {
+                melOsc.disconnect();
+                melGain.disconnect();
+              } catch (_) {}
+            };
+
+            melOsc.start(now);
+            melOsc.stop(now + 0.22);
+          }
+
+          // 3. Soft hi-hat shaker on off-beats
+          if (stepIdx % 2 === 1 && noiseBuffer) {
+            const hatSrc = ctx.createBufferSource();
+            hatSrc.buffer = noiseBuffer;
+
+            const hatFilter = ctx.createBiquadFilter();
+            hatFilter.type = 'highpass';
+            hatFilter.frequency.value = 6800;
+
+            const hatGain = ctx.createGain();
+            hatGain.gain.setValueAtTime(0.045, now);
+            hatGain.gain.exponentialRampToValueAtTime(0.001, now + 0.045);
+
+            hatSrc.connect(hatFilter);
+            hatFilter.connect(hatGain);
+            hatGain.connect(bgmGain);
+
+            hatSrc.onended = () => {
+              try {
+                hatSrc.disconnect();
+                hatFilter.disconnect();
+                hatGain.disconnect();
+              } catch (_) {}
+            };
+
+            hatSrc.start(now);
+            hatSrc.stop(now + 0.045);
           }
 
           bgmStep++;
         } catch (_) {}
-      }, 160);
+      }, 175);
     },
 
     stopBGM() {

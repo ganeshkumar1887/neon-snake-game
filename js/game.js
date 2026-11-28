@@ -785,18 +785,22 @@ const Game = (() => {
         case 'ArrowUp':
         case 'KeyW':
           snake.setDirection({ x: 0, y: -1 });
+          SoundEngine.playSlitherTurn();
           break;
         case 'ArrowDown':
         case 'KeyS':
           snake.setDirection({ x: 0, y: 1 });
+          SoundEngine.playSlitherTurn();
           break;
         case 'ArrowLeft':
         case 'KeyA':
           snake.setDirection({ x: -1, y: 0 });
+          SoundEngine.playSlitherTurn();
           break;
         case 'ArrowRight':
         case 'KeyD':
           snake.setDirection({ x: 1, y: 0 });
+          SoundEngine.playSlitherTurn();
           break;
       }
     });
@@ -832,11 +836,13 @@ const Game = (() => {
         if (Math.abs(deltaX) > minSwipeDistance) {
           if (deltaX > 0) snake.setDirection({ x: 1, y: 0 });
           else snake.setDirection({ x: -1, y: 0 });
+          SoundEngine.playSlitherTurn();
         }
       } else {
         if (Math.abs(deltaY) > minSwipeDistance) {
           if (deltaY > 0) snake.setDirection({ x: 0, y: 1 });
           else snake.setDirection({ x: 0, y: -1 });
+          SoundEngine.playSlitherTurn();
         }
       }
     }, { passive: true });
@@ -918,7 +924,12 @@ const Game = (() => {
     handleDirection(dir) {
       if (currentState === STATES.PLAYING && snake) {
         snake.setDirection(dir);
+        SoundEngine.playSlitherTurn();
       }
+    },
+
+    isPlaying() {
+      return currentState === STATES.PLAYING;
     },
 
     handleResize() {

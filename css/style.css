@@ -95,19 +95,17 @@
 
 html {
   width: 100%;
-  height: 100%;
+  min-height: 100%;
   margin: 0;
   padding: 0;
-  overflow-x: clip;
-  overflow-y: auto;
+  overflow-x: hidden;
+  overflow-y: scroll;
   -webkit-overflow-scrolling: touch;
-  overscroll-behavior-y: contain;
 }
 
 body {
   width: 100%;
   min-height: 100%;
-  height: auto;
   margin: 0;
   padding: 0;
   background-color: var(--color-bg-deep);
@@ -115,7 +113,8 @@ body {
   font-family: var(--font-body);
   font-size: 16px;
   line-height: 1.4;
-  overflow: visible !important;
+  overflow-x: hidden;
+  overflow-y: visible !important;
   user-select: none;
   -webkit-user-select: none;
   touch-action: pan-y pinch-zoom;
@@ -3282,5 +3281,33 @@ input:checked + .slider:before {
 .streak-locked {
   font-size: 0.65rem;
   opacity: 0.65;
+}
+
+/* Audio & Music Toggle Muted Visual States */
+.nav-pill-btn.is-muted,
+.btn-hud-action.is-muted {
+  background: #FEF2F2;
+  border-color: #FCA5A5;
+  color: #DC2626;
+}
+.nav-pill-btn.music-toggle-btn:not(.is-muted) {
+  background: #F5F3FF;
+  border-color: #C4B5FD;
+  color: #6D28D9;
+}
+.nav-pill-btn.sound-toggle-btn:not(.is-muted) {
+  background: #ECFDF5;
+  border-color: #86EFAC;
+  color: #15803D;
+}
+#btn-hud-music:not(.is-muted) {
+  background: #F5F3FF;
+  border-color: #C4B5FD;
+  color: #6D28D9;
+}
+#btn-hud-sound:not(.is-muted) {
+  background: #ECFDF5;
+  border-color: #86EFAC;
+  color: #15803D;
 }
 

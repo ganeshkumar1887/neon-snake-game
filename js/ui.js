@@ -62,6 +62,7 @@ const UI = (() => {
     els.btnOpenLeaderboard = document.getElementById('btn-open-leaderboard');
     els.btnOpenAchievements = document.getElementById('btn-open-achievements');
     els.btnToggleSound = document.getElementById('btn-toggle-sound');
+    els.btnToggleMusic = document.getElementById('btn-toggle-music');
     els.btnHomeFullscreen = document.getElementById('btn-home-fullscreen');
     els.heroCanvas = document.getElementById('hero-canvas');
 
@@ -89,6 +90,7 @@ const UI = (() => {
     els.btnHudPause = document.getElementById('btn-hud-pause');
     els.btnHudRestart = document.getElementById('btn-hud-restart');
     els.btnHudSound = document.getElementById('btn-hud-sound');
+    els.btnHudMusic = document.getElementById('btn-hud-music');
     els.btnHudFullscreen = document.getElementById('btn-hud-fullscreen');
 
     // Overlays
@@ -957,18 +959,45 @@ const UI = (() => {
         });
       });
 
-      // Sound toggles
+      // Audio (Snake Voice & SFX) toggle
       const toggleAudio = () => {
         const settings = Storage.getSettings();
-        const nextState = !settings.soundEnabled;
-        Storage.saveSettings({ soundEnabled: nextState });
-        SoundEngine.setSoundEnabled(nextState);
+        const currentlyOn = settings.soundEnabled !== false && settings.sfxEnabled !== false;
+        const nextState = !currentlyOn;
+        const patch = nextState
+          ? { soundEnabled: true, sfxEnabled: true }
+          : { sfxEnabled: false };
+        Storage.saveSettings(patch);
+        if (nextState) SoundEngine.setSoundEnabled(true);
+        SoundEngine.setSfxEnabled(nextState);
+        this.applySavedSettings();
         this.updateSoundToggles();
-        if (nextState) SoundEngine.playClick();
+        if (nextState) SoundEngine.playSnakeHiss(0.18, 0.25);
+      };
+
+      // Background Music (BGM) toggle
+      const toggleMusic = () => {
+        const settings = Storage.getSettings();
+        const currentlyOn = settings.soundEnabled !== false && settings.bgmEnabled !== false;
+        const nextState = !currentlyOn;
+        const patch = nextState
+          ? { soundEnabled: true, bgmEnabled: true }
+          : { bgmEnabled: false };
+        Storage.saveSettings(patch);
+        if (nextState) SoundEngine.setSoundEnabled(true);
+        SoundEngine.setBgmEnabled(nextState);
+        if (nextState && typeof Game !== 'undefined' && Game.isPlaying && Game.isPlaying()) {
+          SoundEngine.startBGM();
+        }
+        this.applySavedSettings();
+        this.updateSoundToggles();
+        SoundEngine.playClick();
       };
 
       if (els.btnToggleSound) els.btnToggleSound.addEventListener('click', toggleAudio);
       if (els.btnHudSound) els.btnHudSound.addEventListener('click', toggleAudio);
+      if (els.btnToggleMusic) els.btnToggleMusic.addEventListener('click', toggleMusic);
+      if (els.btnHudMusic) els.btnHudMusic.addEventListener('click', toggleMusic);
 
       // Fullscreen Toggle
       const toggleFullscreen = () => {
@@ -1062,6 +1091,7 @@ const UI = (() => {
           const enabled = e.target.checked;
           Storage.saveSettings({ sfxEnabled: enabled });
           SoundEngine.setSfxEnabled(enabled);
+          this.updateSoundToggles();
         });
       }
 
@@ -1070,6 +1100,10 @@ const UI = (() => {
           const enabled = e.target.checked;
           Storage.saveSettings({ bgmEnabled: enabled });
           SoundEngine.setBgmEnabled(enabled);
+          if (enabled && typeof Game !== 'undefined' && Game.isPlaying && Game.isPlaying()) {
+            SoundEngine.startBGM();
+          }
+          this.updateSoundToggles();
         });
       }
 
@@ -1302,15 +1336,28 @@ const UI = (() => {
       }
     },
 
-    // Sound toggle icon sync
+    // Audio (Voice/SFX) & Music toggle icon sync
     updateSoundToggles() {
-      const isMuted = SoundEngine.isMuted();
+      const sfxMuted = SoundEngine.isSfxMuted ? SoundEngine.isSfxMuted() : SoundEngine.isMuted();
+      const bgmMuted = SoundEngine.isBgmMuted ? SoundEngine.isBgmMuted() : SoundEngine.isMuted();
+
       document.querySelectorAll('.icon-sound-on').forEach(icon => {
-        icon.classList.toggle('hide', isMuted);
+        icon.classList.toggle('hide', sfxMuted);
       });
       document.querySelectorAll('.icon-sound-off').forEach(icon => {
-        icon.classList.toggle('hide', !isMuted);
+        icon.classList.toggle('hide', !sfxMuted);
       });
+      if (els.btnToggleSound) els.btnToggleSound.classList.toggle('is-muted', sfxMuted);
+      if (els.btnHudSound) els.btnHudSound.classList.toggle('is-muted', sfxMuted);
+
+      document.querySelectorAll('.icon-music-on').forEach(icon => {
+        icon.classList.toggle('hide', bgmMuted);
+      });
+      document.querySelectorAll('.icon-music-off').forEach(icon => {
+        icon.classList.toggle('hide', !bgmMuted);
+      });
+      if (els.btnToggleMusic) els.btnToggleMusic.classList.toggle('is-muted', bgmMuted);
+      if (els.btnHudMusic) els.btnHudMusic.classList.toggle('is-muted', bgmMuted);
     },
 
     // Best Score Display

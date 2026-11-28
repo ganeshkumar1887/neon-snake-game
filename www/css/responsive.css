@@ -268,13 +268,12 @@
   html {
     font-size: 14px;
     width: 100%;
-    height: 100%;
+    min-height: 100%;
     margin: 0;
     padding: 0;
-    overflow-x: clip;
-    overflow-y: auto;
+    overflow-x: hidden;
+    overflow-y: scroll;
     -webkit-overflow-scrolling: touch;
-    overscroll-behavior-y: contain;
     background-color: var(--color-bg-deep);
   }
 
@@ -282,17 +281,18 @@
     font-size: 14px;
     width: 100%;
     min-height: 100%;
-    height: auto;
     margin: 0;
     padding: 0;
-    overflow: visible !important;
+    overflow-x: hidden;
+    overflow-y: visible !important;
     touch-action: pan-y pinch-zoom;
     background-color: var(--color-bg-deep);
   }
 
   /* When playing game, allow smooth vertical scrolling on mobile WebView */
   body.in-game {
-    overflow: visible !important;
+    overflow-x: hidden;
+    overflow-y: visible !important;
     min-height: 100%;
     position: relative !important;
     width: 100% !important;
@@ -305,7 +305,7 @@
     width: 100%;
     min-height: 100%;
     height: auto;
-    overflow-x: clip;
+    overflow-x: hidden;
     overflow-y: visible !important;
     display: flex;
     flex-direction: column;
@@ -546,14 +546,18 @@
   }
 
   .btn-hud-action {
-    width: 38px;
-    height: 38px;
-    border-radius: 11px;
+    width: 34px;
+    height: 34px;
+    border-radius: 10px;
+  }
+
+  #btn-hud-fullscreen {
+    display: none;
   }
 
   .hud-icon {
-    width: 19px;
-    height: 19px;
+    width: 18px;
+    height: 18px;
   }
 
   /* Game Board: Larger, taller & attractive frame on mobile portrait */
